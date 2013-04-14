@@ -1,0 +1,323 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>视频采集及显示: video_info结构参考</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+<!-- 制作者 Doxygen 1.5.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="pages.html"><span>相关页面</span></a></li>
+      <li class="current"><a href="annotated.html"><span>类</span></a></li>
+      <li><a href="files.html"><span>文件</span></a></li>
+    <li>
+      <form action="search.php" method="get">
+        <table cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td><label>&nbsp;搜索&nbsp;</label></td>
+            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
+          </tr>
+        </table>
+      </form>
+    </li>
+    </ul>
+  </div>
+  <div class="tabs">
+    <ul>
+      <li><a href="annotated.html"><span>组合类型列表</span></a></li>
+      <li><a href="classes.html"><span>组合类型索引</span></a></li>
+      <li><a href="functions.html"><span>组合类型成员</span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="contents">
+<h1>video_info结构参考</h1><!-- doxytag: class="video_info" --><code>#include &lt;<a class="el" href="v4l2uvc_8h-source.html">v4l2uvc.h</a>&gt;</code>
+<p>
+
+<p>
+<a href="structvideo__info-members.html">所有成员的列表。</a><table border="0" cellpadding="0" cellspacing="0">
+<tr><td></td></tr>
+<tr><td colspan="2"><br><h2>公有属性</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#b5894d7d27de550a3b0376e413b185a9">camfd</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct v4l2_capability&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#8b508ff7f15402f53bca853bdab54200">cap</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct v4l2_format&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#f14c50089a231a729a4e9e2e7b392ae5">fmt</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct v4l2_requestbuffers&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#698cad2ae5eb2e633d5fafbf32e6117a">rb</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct v4l2_buffer&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#514aa1b59841fee3836185646d4e6e22">buf</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum v4l2_buf_type&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#ad32322eef36f141f8a873ec6e753382">type</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#02ddb28fefb4821819ef6a3b4ca92feb">mem</a> [NB_BUFFER]</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="my-types_8h.html#dde6aaee8457bee49c2a92621fe22b79">uint8</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#2486e21e4cad92124a30cedbf0891865">tmp_buffer</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="my-types_8h.html#dde6aaee8457bee49c2a92621fe22b79">uint8</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#b9d9a2a87aad3a391321e7e4553df8f3">frame_buffer</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">uint32&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#4f6a5c15a37e0e762303df782529ade8">frame_size_in</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">uint32&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#730e2782962b5b01a56c8c685a30abab">format</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#dea9e085d82a0b0963565e26f3540153">width</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#20cc18dde6019ffe2ff64c787254a7af">height</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#ab9e69db0d36dc9c093dc5312314755a">is_streaming</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvideo__info.html#8302bf3040988cdd927f3ff1e8189f7e">is_quit</a></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="5012a738f77726ee4dda01ce3291d0fd"></a><!-- doxytag: member="video_info::field" ref="5012a738f77726ee4dda01ce3291d0fd" args="" -->
+enum v4l2_field&nbsp;</td><td class="memItemRight" valign="bottom"><b>field</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6e6405f0a27eae7485d50b40f030a466"></a><!-- doxytag: member="video_info::bytes_per_line" ref="6e6405f0a27eae7485d50b40f030a466" args="" -->
+uint32&nbsp;</td><td class="memItemRight" valign="bottom"><b>bytes_per_line</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="70617a91cdf3a29e64c90a9b6d05350e"></a><!-- doxytag: member="video_info::size_image" ref="70617a91cdf3a29e64c90a9b6d05350e" args="" -->
+uint32&nbsp;</td><td class="memItemRight" valign="bottom"><b>size_image</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="268ed5ba17fbdc84a160da3de0fe4744"></a><!-- doxytag: member="video_info::color_space" ref="268ed5ba17fbdc84a160da3de0fe4744" args="" -->
+enum v4l2_colorspace&nbsp;</td><td class="memItemRight" valign="bottom"><b>color_space</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="5409efb77ac6b5e69847e0dc181870ea"></a><!-- doxytag: member="video_info::priv" ref="5409efb77ac6b5e69847e0dc181870ea" args="" -->
+uint32&nbsp;</td><td class="memItemRight" valign="bottom"><b>priv</b></td></tr>
+
+</table>
+<hr><a name="_details"></a><h2>详细描述</h2>
+自定义的摄像头信息结构体 <hr><h2>成员数据文档</h2>
+<a class="anchor" name="514aa1b59841fee3836185646d4e6e22"></a><!-- doxytag: member="video_info::buf" ref="514aa1b59841fee3836185646d4e6e22" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct v4l2_buffer <a class="el" href="structvideo__info.html#514aa1b59841fee3836185646d4e6e22">video_info::buf</a><code> [read]</code>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+buffer 
+</div>
+</div><p>
+<a class="anchor" name="b5894d7d27de550a3b0376e413b185a9"></a><!-- doxytag: member="video_info::camfd" ref="b5894d7d27de550a3b0376e413b185a9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structvideo__info.html#b5894d7d27de550a3b0376e413b185a9">video_info::camfd</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+摄像头文件描述符，由open系统调用指定 
+</div>
+</div><p>
+<a class="anchor" name="8b508ff7f15402f53bca853bdab54200"></a><!-- doxytag: member="video_info::cap" ref="8b508ff7f15402f53bca853bdab54200" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct v4l2_capability <a class="el" href="structvideo__info.html#8b508ff7f15402f53bca853bdab54200">video_info::cap</a><code> [read]</code>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+摄像头capability(属性) 
+</div>
+</div><p>
+<a class="anchor" name="f14c50089a231a729a4e9e2e7b392ae5"></a><!-- doxytag: member="video_info::fmt" ref="f14c50089a231a729a4e9e2e7b392ae5" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct v4l2_format <a class="el" href="structvideo__info.html#f14c50089a231a729a4e9e2e7b392ae5">video_info::fmt</a><code> [read]</code>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+摄像头格式，使用该结构体对摄像头进行设置 
+</div>
+</div><p>
+<a class="anchor" name="730e2782962b5b01a56c8c685a30abab"></a><!-- doxytag: member="video_info::format" ref="730e2782962b5b01a56c8c685a30abab" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32 <a class="el" href="structvideo__info.html#730e2782962b5b01a56c8c685a30abab">video_info::format</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+摄像头支持的格式，如MJPEG、YUYV等 
+</div>
+</div><p>
+<a class="anchor" name="b9d9a2a87aad3a391321e7e4553df8f3"></a><!-- doxytag: member="video_info::frame_buffer" ref="b9d9a2a87aad3a391321e7e4553df8f3" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="my-types_8h.html#dde6aaee8457bee49c2a92621fe22b79">uint8</a>* <a class="el" href="structvideo__info.html#b9d9a2a87aad3a391321e7e4553df8f3">video_info::frame_buffer</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+一帧图像缓冲区 
+</div>
+</div><p>
+<a class="anchor" name="4f6a5c15a37e0e762303df782529ade8"></a><!-- doxytag: member="video_info::frame_size_in" ref="4f6a5c15a37e0e762303df782529ade8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32 <a class="el" href="structvideo__info.html#4f6a5c15a37e0e762303df782529ade8">video_info::frame_size_in</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+一帧图像大小(=宽x高x2) 
+</div>
+</div><p>
+<a class="anchor" name="20cc18dde6019ffe2ff64c787254a7af"></a><!-- doxytag: member="video_info::height" ref="20cc18dde6019ffe2ff64c787254a7af" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structvideo__info.html#20cc18dde6019ffe2ff64c787254a7af">video_info::height</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+图像高 
+</div>
+</div><p>
+<a class="anchor" name="8302bf3040988cdd927f3ff1e8189f7e"></a><!-- doxytag: member="video_info::is_quit" ref="8302bf3040988cdd927f3ff1e8189f7e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structvideo__info.html#8302bf3040988cdd927f3ff1e8189f7e">video_info::is_quit</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+退出显示 
+</div>
+</div><p>
+<a class="anchor" name="ab9e69db0d36dc9c093dc5312314755a"></a><!-- doxytag: member="video_info::is_streaming" ref="ab9e69db0d36dc9c093dc5312314755a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structvideo__info.html#ab9e69db0d36dc9c093dc5312314755a">video_info::is_streaming</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+开始采集 
+</div>
+</div><p>
+<a class="anchor" name="02ddb28fefb4821819ef6a3b4ca92feb"></a><!-- doxytag: member="video_info::mem" ref="02ddb28fefb4821819ef6a3b4ca92feb" args="[NB_BUFFER]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void* <a class="el" href="structvideo__info.html#02ddb28fefb4821819ef6a3b4ca92feb">video_info::mem</a>[NB_BUFFER]          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+main buffers 
+</div>
+</div><p>
+<a class="anchor" name="698cad2ae5eb2e633d5fafbf32e6117a"></a><!-- doxytag: member="video_info::rb" ref="698cad2ae5eb2e633d5fafbf32e6117a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct v4l2_requestbuffers <a class="el" href="structvideo__info.html#698cad2ae5eb2e633d5fafbf32e6117a">video_info::rb</a><code> [read]</code>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+请求缓冲，一般不超过5个 
+</div>
+</div><p>
+<a class="anchor" name="2486e21e4cad92124a30cedbf0891865"></a><!-- doxytag: member="video_info::tmp_buffer" ref="2486e21e4cad92124a30cedbf0891865" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="my-types_8h.html#dde6aaee8457bee49c2a92621fe22b79">uint8</a>* <a class="el" href="structvideo__info.html#2486e21e4cad92124a30cedbf0891865">video_info::tmp_buffer</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+临时缓冲区，针对MJPEG格式而设 
+</div>
+</div><p>
+<a class="anchor" name="ad32322eef36f141f8a873ec6e753382"></a><!-- doxytag: member="video_info::type" ref="ad32322eef36f141f8a873ec6e753382" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum v4l2_buf_type <a class="el" href="structvideo__info.html#ad32322eef36f141f8a873ec6e753382">video_info::type</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+控制命令字？ 
+</div>
+</div><p>
+<a class="anchor" name="dea9e085d82a0b0963565e26f3540153"></a><!-- doxytag: member="video_info::width" ref="dea9e085d82a0b0963565e26f3540153" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structvideo__info.html#dea9e085d82a0b0963565e26f3540153">video_info::width</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+图像宽 
+</div>
+</div><p>
+<hr>该结构的文档由以下文件生成：<ul>
+<li><a class="el" href="v4l2uvc_8h-source.html">v4l2uvc.h</a></ul>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated at Tue Jan 25 21:25:34 2011 for 视频采集及显示 by&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.7.1 </small></address>
+</body>
+</html>

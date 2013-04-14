@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>视频采集及显示: 测试列表</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+<!-- 制作者 Doxygen 1.5.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li class="current"><a href="pages.html"><span>相关页面</span></a></li>
+      <li><a href="annotated.html"><span>类</span></a></li>
+      <li><a href="files.html"><span>文件</span></a></li>
+    <li>
+      <form action="search.php" method="get">
+        <table cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td><label>&nbsp;搜索&nbsp;</label></td>
+            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
+          </tr>
+        </table>
+      </form>
+    </li>
+    </ul>
+  </div>
+</div>
+<div class="contents">
+<h1><a class="anchor" name="test">测试列表 </a></h1><a class="anchor" name="_test000001"></a> <dl>
+<dt>文件 <a class="el" href="debug-msg_8h.html">debug-msg.h</a>  </dt>
+<dd>I only use this file on linux(with x86 &amp; arm) platform. </dd>
+</dl>
+<p>
+<a class="anchor" name="_test000002"></a> <dl>
+<dt>文件 <a class="el" href="main_8c.html">main.c</a>  </dt>
+<dd>在程序目录中直接输入<code>make</code> 即可编译生成<code>capture</code> 可执行文件。<br>
+ 输入<code></code>./capture即可运行程序，在运行程序之前，请确保插入USB摄像头，并查看<code>/dev</code> 目录下 是否生成<code>video</code> 设备文件(使用命令<code>ls -l /dev | grep video</code>)，经测试，在PC中，/dev/video文件 是摄像头设备的链接文件名称，程序中即使用这个文件名。<br>
+ 程序测试环境如下：<br>
+ 虚拟机fc10 <br>
+ [latelee camera-pc-utf]$ uname -a <br>
+ Linux latelee.latelee.org 2.6.27.5-117.fc10.i686 #1 SMP Tue Nov 18 12:19:59 EST 2008 i686 i686 i386 GNU/Linux <br>
+ [latelee camera-pc-utf]$ rpm -q "SDL" <br>
+ SDL-1.2.13-6.fc10.i386 <br>
+ [latelee camera-pc-utf]$ rpm -q "glibc" <br>
+ glibc-2.9-2.i686 <br>
+ 测试图示： </dd>
+</dl>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated at Tue Jan 25 21:25:34 2011 for 视频采集及显示 by&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.7.1 </small></address>
+</body>
+</html>

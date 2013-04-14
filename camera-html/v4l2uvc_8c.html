@@ -1,0 +1,461 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>视频采集及显示: v4l2uvc.c文件参考</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+<!-- 制作者 Doxygen 1.5.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="pages.html"><span>相关页面</span></a></li>
+      <li><a href="annotated.html"><span>类</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    <li>
+      <form action="search.php" method="get">
+        <table cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td><label>&nbsp;搜索&nbsp;</label></td>
+            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
+          </tr>
+        </table>
+      </form>
+    </li>
+    </ul>
+  </div>
+  <div class="tabs">
+    <ul>
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>文件成员</span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="contents">
+<h1>v4l2uvc.c文件参考</h1>vedio capture for Vedio Surveillance System(VSS) using v4l2 APIs  
+<a href="#_details">更多...</a>
+<p>
+<code>#include &quot;<a class="el" href="v4l2uvc_8h-source.html">v4l2uvc.h</a>&quot;</code><br>
+<code>#include &quot;utils.h&quot;</code><br>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><td></td></tr>
+<tr><td colspan="2"><br><h2>宏定义</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0409280e4970e5eb84145289a36cb2cc"></a><!-- doxytag: member="v4l2uvc.c::HEADFRAME1" ref="0409280e4970e5eb84145289a36cb2cc" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>HEADFRAME1</b>&nbsp;&nbsp;&nbsp;0xaf</td></tr>
+
+<tr><td colspan="2"><br><h2>函数</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#a1fdc989d881ca118158a992c76571b9">v4l2_open</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#61c9fc1bec63e89b6f853309c1f95ae9">v4l2_close</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#849244225776a036645a7c4cf0e21c5e">v4l2_init</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>, uint32 format, uint32 width, uint32 height)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#41087b45e845a328e35103e91a9fb163">v4l2_on</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#8bb1e11d9460b087624cca4dcad97900">v4l2_off</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#5ca14d166295153f0ef2da1d19a05b46">v4l2_get_pic</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#a8f5c42c1694697d789c03b9d78437f9">v4l2_process</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#904536e67e0dcfebabf2d5a8431d7c39">v4l2_grab</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#8ae5ca67e541a39823fef4f63d38fe13">v4l2_capture</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#7e92bc0db8539c2cacd11c3eba77fe4c">v4l2_get_capability</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#1ea6e9273b5389fa3477efb25d6bb0cb">v4l2_get_format</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="v4l2uvc_8c.html#ba979a75447e2b3b4968c0e96ea46c9e">v4l2_set_foramt</a> (struct <a class="el" href="structvideo__info.html">video_info</a> *<a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a>, uint32 format, uint32 width, uint32 height)</td></tr>
+
+</table>
+<hr><a name="_details"></a><h2>详细描述</h2>
+vedio capture for Vedio Surveillance System(VSS) using v4l2 APIs 
+<p>
+Copyleft (C) 2010 Late Lee This program is tested on LINUX PLATFORM, WITH GCC 4.x. The program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY. Please feel free to use the program, and I feel free to ignore the related issues. Any questions or suggestions, or bugs, please contact me at &lt;$ echo -n "aHR0cDovL3d3dy5sYXRlbGVlLm9yZwo=" | base64 -d&gt; or e-mail to &lt;$ echo -n "bGF0ZWxlZUAxNjMuY29tCg==" | base64 -d&gt; if you want to do this.<p>
+<dl class="author" compact><dt><b>作者:</b></dt><dd>Late Lee &lt;<a href="mailto:latelee@163.com">latelee@163.com</a>&gt; </dd></dl>
+<dl class="date" compact><dt><b>日期:</b></dt><dd>Sat Apr 24 2010 </dd></dl>
+<hr><h2>函数文档</h2>
+<a class="anchor" name="8ae5ca67e541a39823fef4f63d38fe13"></a><!-- doxytag: member="v4l2uvc.c::v4l2_capture" ref="8ae5ca67e541a39823fef4f63d38fe13" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void v4l2_capture           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_capture - 采集摄像头数据<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体 </td></tr>
+  </table>
+</dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>该函数为测试函数，实际中未使用 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="61c9fc1bec63e89b6f853309c1f95ae9"></a><!-- doxytag: member="v4l2uvc.c::v4l2_close" ref="61c9fc1bec63e89b6f853309c1f95ae9" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_close           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_close - 关闭摄像头，并释放内存<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功关闭返回值为0，否则为-1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="7e92bc0db8539c2cacd11c3eba77fe4c"></a><!-- doxytag: member="v4l2uvc.c::v4l2_get_capability" ref="7e92bc0db8539c2cacd11c3eba77fe4c" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_get_capability           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_get_capability - 获取摄像头capability<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功则返回0，否则返回－1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="1ea6e9273b5389fa3477efb25d6bb0cb"></a><!-- doxytag: member="v4l2uvc.c::v4l2_get_format" ref="1ea6e9273b5389fa3477efb25d6bb0cb" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_get_format           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_get_format - 获取摄像头格式<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回0，否则返回－1，并提示出错信息 </dd></dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>1、在RF6.02中获得到格式为YUYV，但在FC10中却是MJPEG，未知原因 2、v4l2_pix_format结构体成员pixelformat，在某些平台上却是pixelfmt，具体参考vedeodev2.h 头文件，原因未找到 3、获取可读性的格式的代码片段是参考网上资料的 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="5ca14d166295153f0ef2da1d19a05b46"></a><!-- doxytag: member="v4l2uvc.c::v4l2_get_pic" ref="5ca14d166295153f0ef2da1d19a05b46" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_get_pic           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_get_pic - 获取图片<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功则返回0，否则返回-1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="904536e67e0dcfebabf2d5a8431d7c39"></a><!-- doxytag: member="v4l2uvc.c::v4l2_grab" ref="904536e67e0dcfebabf2d5a8431d7c39" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_grab           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_grab - 采集摄像头数据<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功则返回0，否则返回-1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="849244225776a036645a7c4cf0e21c5e"></a><!-- doxytag: member="v4l2uvc.c::v4l2_init" ref="849244225776a036645a7c4cf0e21c5e" args="(struct video_info *vd_info, uint32 format, uint32 width, uint32 height)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_init           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>height</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_init - 以指定参数初始化摄像头，该函数包括了打开摄像头<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体 </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>format</em>&nbsp;</td><td>摄像头支持的格式，如V4L2_PIX_FMT_YUYV </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>width</em>&nbsp;</td><td>图像宽，如640 </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>height</em>&nbsp;</td><td>图像高，如480</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功初始化则返回0，否则返回-1，并提示出错信息 </dd></dl>
+
+<p>
+'format' will be also ok 
+</div>
+</div><p>
+<a class="anchor" name="8bb1e11d9460b087624cca4dcad97900"></a><!-- doxytag: member="v4l2uvc.c::v4l2_off" ref="8bb1e11d9460b087624cca4dcad97900" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_off           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_off - 停止采集摄像头数据<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功则返回0，否则返回-1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="41087b45e845a328e35103e91a9fb163"></a><!-- doxytag: member="v4l2uvc.c::v4l2_on" ref="41087b45e845a328e35103e91a9fb163" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_on           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_on - 启动摄像头采集数据<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功开始采集则返回0，否则返回-1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="a1fdc989d881ca118158a992c76571b9"></a><!-- doxytag: member="v4l2uvc.c::v4l2_open" ref="a1fdc989d881ca118158a992c76571b9" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_open           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_open - 打开摄像头<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回值为0，否则为-1，并提示出错信息 </dd></dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>vd_info结构体中的摄像头描述符由此函数指定 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="a8f5c42c1694697d789c03b9d78437f9"></a><!-- doxytag: member="v4l2uvc.c::v4l2_process" ref="a8f5c42c1694697d789c03b9d78437f9" args="(struct video_info *vd_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_process           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_process - 摄像头数据处理<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功则返回0，否则返回-1，并提示出错信息 </dd></dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>如果摄像头为MJPEG格式，则可以直接将tmp_buff的数据写到文件， 保存为jpg格式，即为一张图片。 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="ba979a75447e2b3b4968c0e96ea46c9e"></a><!-- doxytag: member="v4l2uvc.c::v4l2_set_foramt" ref="ba979a75447e2b3b4968c0e96ea46c9e" args="(struct video_info *vd_info, uint32 format, uint32 width, uint32 height)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int v4l2_set_foramt           </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td>
+          <td class="paramname"> <em>vd_info</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32&nbsp;</td>
+          <td class="paramname"> <em>height</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+v4l2_set_format - 设置摄像头格式<p>
+<dl compact><dt><b>参数:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>vd_info</em>&nbsp;</td><td>摄像头信息结构体 </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>format</em>&nbsp;</td><td>格式，如V4L2_PIX_FMT_YUYV </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>width</em>&nbsp;</td><td>图像宽度 </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>height</em>&nbsp;</td><td>图像高度</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回0，否则返回－1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated at Tue Jan 25 21:25:34 2011 for 视频采集及显示 by&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.7.1 </small></address>
+</body>
+</html>

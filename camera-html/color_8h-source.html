@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>视频采集及显示: color.h源文件</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+<!-- 制作者 Doxygen 1.5.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="pages.html"><span>相关页面</span></a></li>
+      <li><a href="annotated.html"><span>类</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    <li>
+      <form action="search.php" method="get">
+        <table cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td><label>&nbsp;搜索&nbsp;</label></td>
+            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
+          </tr>
+        </table>
+      </form>
+    </li>
+    </ul>
+  </div>
+  <div class="tabs">
+    <ul>
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>文件成员</span></a></li>
+    </ul>
+  </div>
+<h1>color.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/****************************************************************************</span>
+<a name="l00002"></a>00002 <span class="comment">#               GspcaGui:  Gspca/Spca5xx Grabber                            #</span>
+<a name="l00003"></a>00003 <span class="comment">#               Copyright (C) 2004 2005 2006 Michel Xhaard                  #</span>
+<a name="l00004"></a>00004 <span class="comment">#                                                                           #</span>
+<a name="l00005"></a>00005 <span class="comment"># This program is free software; you can redistribute it and/or modify      #</span>
+<a name="l00006"></a>00006 <span class="comment"># it under the terms of the GNU General Public License as published by      #</span>
+<a name="l00007"></a>00007 <span class="comment"># the Free Software Foundation; either version 2 of the License, or         #</span>
+<a name="l00008"></a>00008 <span class="comment"># (at your option) any later version.                                       #</span>
+<a name="l00009"></a>00009 <span class="comment">#                                                                           #</span>
+<a name="l00010"></a>00010 <span class="comment"># This program is distributed in the hope that it will be useful,           #</span>
+<a name="l00011"></a>00011 <span class="comment"># but WITHOUT ANY WARRANTY; without even the implied warranty of            #</span>
+<a name="l00012"></a>00012 <span class="comment"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #</span>
+<a name="l00013"></a>00013 <span class="comment"># GNU General Public License for more details.                              #</span>
+<a name="l00014"></a>00014 <span class="comment">#                                                                           #</span>
+<a name="l00015"></a>00015 <span class="comment"># You should have received a copy of the GNU General Public License         #</span>
+<a name="l00016"></a>00016 <span class="comment"># along with this program; if not, write to the Free Software               #</span>
+<a name="l00017"></a>00017 <span class="comment"># Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA #</span>
+<a name="l00018"></a>00018 <span class="comment">#                                                                           #</span>
+<a name="l00019"></a>00019 <span class="comment">****************************************************************************/</span> 
+<a name="l00020"></a>00020 <span class="keyword">typedef</span> <span class="keyword">struct </span>Myrgb16 {
+<a name="l00021"></a>00021         <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> blue:5;
+<a name="l00022"></a>00022         <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> green:6;
+<a name="l00023"></a>00023         <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> red:5;
+<a name="l00024"></a>00024 } Myrgb16;
+<a name="l00025"></a>00025 <span class="keyword">typedef</span> <span class="keyword">struct </span>Myrgb24 {
+<a name="l00026"></a>00026         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> blue;
+<a name="l00027"></a>00027         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> green;
+<a name="l00028"></a>00028         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> red;
+<a name="l00029"></a>00029 } Myrgb24;
+<a name="l00030"></a>00030 <span class="keyword">typedef</span> <span class="keyword">struct </span>Myrgb32 {
+<a name="l00031"></a>00031         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> blue;
+<a name="l00032"></a>00032         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> green;
+<a name="l00033"></a>00033         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> red;
+<a name="l00034"></a>00034         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> alpha;
+<a name="l00035"></a>00035 } Myrgb32;
+<a name="l00036"></a>00036 
+<a name="l00037"></a>00037 <span class="keyword">typedef</span> <span class="keyword">struct </span>MyYUV422 {
+<a name="l00038"></a>00038         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y0;
+<a name="l00039"></a>00039         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> u;
+<a name="l00040"></a>00040         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y1;
+<a name="l00041"></a>00041         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> v;
+<a name="l00042"></a>00042 } MyYUV422;
+<a name="l00043"></a>00043 
+<a name="l00044"></a>00044 <span class="keyword">typedef</span> <span class="keyword">struct </span>MyYUV444 {
+<a name="l00045"></a>00045         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y;
+<a name="l00046"></a>00046         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> u;
+<a name="l00047"></a>00047         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> v;
+<a name="l00048"></a>00048 } MyYUV444;
+<a name="l00049"></a>00049 
+<a name="l00050"></a>00050 <span class="preprocessor">#define CLIP(color) (unsigned char)(((color)&gt;0xFF)?0xff:(((color)&lt;0)?0:(color)))</span>
+<a name="l00051"></a>00051 <span class="preprocessor"></span>
+<a name="l00052"></a>00052 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00053"></a>00053 RGB24_TO_Y(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> r, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> g, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> b);
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00056"></a>00056 YR_TO_V(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> r, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y);
+<a name="l00057"></a>00057 
+<a name="l00058"></a>00058 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00059"></a>00059 YB_TO_U(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> b, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y);
+<a name="l00060"></a>00060 
+<a name="l00061"></a>00061 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00062"></a>00062 R_FROMYV(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> v);
+<a name="l00063"></a>00063 
+<a name="l00064"></a>00064 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00065"></a>00065 G_FROMYUV(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> u, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> v);
+<a name="l00066"></a>00066 
+<a name="l00067"></a>00067 <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>
+<a name="l00068"></a>00068 B_FROMYU(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> y, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> u);
+<a name="l00069"></a>00069 
+<a name="l00070"></a>00070 <span class="preprocessor">#define YfromRGB(r,g,b) CLIP((77*(r)+150*(g)+29*(b))&gt;&gt;8)</span>
+<a name="l00071"></a>00071 <span class="preprocessor"></span><span class="preprocessor">#define UfromRGB(r,g,b) CLIP(((128*(b)-85*(g)-43*(r))&gt;&gt;8 )+128)</span>
+<a name="l00072"></a>00072 <span class="preprocessor"></span><span class="preprocessor">#define VfromRGB(r,g,b) CLIP(((128*(r)-107*(g)-21*(b))&gt;&gt;8) +128)</span>
+<a name="l00073"></a>00073 <span class="preprocessor"></span>
+<a name="l00074"></a>00074 <span class="preprocessor">#define PACKRGB16(r,g,b) (__u16) ((((b) &amp; 0xF8) &lt;&lt; 8 ) | (((g) &amp; 0xFC) &lt;&lt; 3 ) | (((r) &amp; 0xF8) &gt;&gt; 3 ))</span>
+<a name="l00075"></a>00075 <span class="preprocessor"></span><span class="preprocessor">#define UNPACK16(pixel,r,g,b) r=((pixel)&amp;0xf800) &gt;&gt; 8;  g=((pixel)&amp;0x07e0) &gt;&gt; 3; b=(((pixel)&amp;0x001f) &lt;&lt; 3)</span>
+<a name="l00076"></a>00076 <span class="preprocessor"></span>
+<a name="l00077"></a>00077 <span class="keywordtype">void</span> initLut(<span class="keywordtype">void</span>);
+<a name="l00078"></a>00078 <span class="keywordtype">void</span> freeLut(<span class="keywordtype">void</span>);
+</pre></div></div>
+<hr size="1"><address style="text-align: right;"><small>Generated at Tue Jan 25 21:25:34 2011 for 视频采集及显示 by&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.7.1 </small></address>
+</body>
+</html>

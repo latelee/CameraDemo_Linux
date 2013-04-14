@@ -1,0 +1,9 @@
+编译：
+$ make
+生成的可执行文件为capture
+
+执行程序：
+$ ./capture
+
+清除编译过程的目标文件，请输入
+$ make clean

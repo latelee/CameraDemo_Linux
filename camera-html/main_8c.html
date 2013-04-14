@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>视频采集及显示: main.c文件参考</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+<!-- 制作者 Doxygen 1.5.7.1 -->
+<div class="navigation" id="top">
+  <div class="tabs">
+    <ul>
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="pages.html"><span>相关页面</span></a></li>
+      <li><a href="annotated.html"><span>类</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    <li>
+      <form action="search.php" method="get">
+        <table cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td><label>&nbsp;搜索&nbsp;</label></td>
+            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
+          </tr>
+        </table>
+      </form>
+    </li>
+    </ul>
+  </div>
+  <div class="tabs">
+    <ul>
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>文件成员</span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="contents">
+<h1>main.c文件参考</h1>none  
+<a href="#_details">更多...</a>
+<p>
+<code>#include &lt;SDL/SDL.h&gt;</code><br>
+<code>#include &lt;SDL/SDL_thread.h&gt;</code><br>
+<code>#include &lt;SDL/SDL_audio.h&gt;</code><br>
+<code>#include &lt;SDL/SDL_timer.h&gt;</code><br>
+<code>#include &lt;SDL/SDL_syswm.h&gt;</code><br>
+<code>#include &lt;signal.h&gt;</code><br>
+<code>#include &quot;<a class="el" href="v4l2uvc_8h-source.html">v4l2uvc.h</a>&quot;</code><br>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><td></td></tr>
+<tr><td colspan="2"><br><h2>函数</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#63cc7205ac2d613a246844c3e07774d8">get_info</a> (void)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#ea484feb5c785da8cba198c0f5cbb40b">display</a> (void)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#840291bc02cba5474a4cb46a9b9566fe">main</a> (void)</td></tr>
+
+<tr><td colspan="2"><br><h2>变量</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct <a class="el" href="structvideo__info.html">video_info</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a> = NULL</td></tr>
+
+</table>
+<hr><a name="_details"></a><h2>详细描述</h2>
+none 
+<p>
+Copyleft (C) 2010 Late Lee This program is tested on LINUX PLATFORM, WITH GCC 4.x. The program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY. Please feel free to use the program, and I feel free to ignore the related issues. Any questions or suggestions, or bugs, please contact me at &lt;$ echo -n "aHR0cDovL3d3dy5sYXRlbGVlLm9yZwo=" | base64 -d&gt; or e-mail to &lt;$ echo -n "bGF0ZWxlZUAxNjMuY29tCg==" | base64 -d&gt; if you want to do this.<p>
+<dl class="author" compact><dt><b>作者:</b></dt><dd>Late Lee </dd></dl>
+<dl class="date" compact><dt><b>日期:</b></dt><dd>Sat May 29 2010</dd></dl>
+<dl compact><dt><b><a class="el" href="test.html#_test000002">测试:</a></b></dt><dd>在程序目录中直接输入<code>make</code> 即可编译生成<code>capture</code> 可执行文件。<br>
+ 输入<code></code>./capture即可运行程序，在运行程序之前，请确保插入USB摄像头，并查看<code>/dev</code> 目录下 是否生成<code>video</code> 设备文件(使用命令<code>ls -l /dev | grep video</code>)，经测试，在PC中，/dev/video文件 是摄像头设备的链接文件名称，程序中即使用这个文件名。<br>
+ 程序测试环境如下：<br>
+ 虚拟机fc10 <br>
+ [latelee camera-pc-utf]$ uname -a <br>
+ Linux latelee.latelee.org 2.6.27.5-117.fc10.i686 #1 SMP Tue Nov 18 12:19:59 EST 2008 i686 i686 i386 GNU/Linux <br>
+ [latelee camera-pc-utf]$ rpm -q "SDL" <br>
+ SDL-1.2.13-6.fc10.i386 <br>
+ [latelee camera-pc-utf]$ rpm -q "glibc" <br>
+ glibc-2.9-2.i686 <br>
+ 测试图示： </dd></dl>
+<div align="center">
+<img src="pic-640x480.png" alt="pic-640x480.png">
+<p><strong>租房一角(640x480)</strong></p></div>
+ <div align="center">
+<img src="pic-1024x768.png" alt="pic-1024x768.png">
+<p><strong>指定范围太大，失败(1024x768)</strong></p></div>
+<hr><h2>函数文档</h2>
+<a class="anchor" name="ea484feb5c785da8cba198c0f5cbb40b"></a><!-- doxytag: member="main.c::display" ref="ea484feb5c785da8cba198c0f5cbb40b" args="(void)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int display           </td>
+          <td>(</td>
+          <td class="paramtype">void&nbsp;</td>
+          <td class="paramname">          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+display - 使用SDL显示图像<p>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回0，否则返回－1，并提示出错信息 </dd></dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>本函数涉及许多SDL库的类型及函数 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="63cc7205ac2d613a246844c3e07774d8"></a><!-- doxytag: member="main.c::get_info" ref="63cc7205ac2d613a246844c3e07774d8" args="(void)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int get_info           </td>
+          <td>(</td>
+          <td class="paramtype">void&nbsp;</td>
+          <td class="paramname">          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+get_info - 获取摄像头信息测试函数，由main函数调用<p>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回0，否则返回－1，并提示出错信息 </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="840291bc02cba5474a4cb46a9b9566fe"></a><!-- doxytag: member="main.c::main" ref="840291bc02cba5474a4cb46a9b9566fe" args="(void)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int main           </td>
+          <td>(</td>
+          <td class="paramtype">void&nbsp;</td>
+          <td class="paramname">          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+main - 主函数<p>
+<dl class="return" compact><dt><b>返回:</b></dt><dd>成功返回0，否则返回－1，并提示出错信息 </dd></dl>
+<dl class="note" compact><dt><b>注解:</b></dt><dd>测试过程 <br>
+ 1、先获取摄像头相关信息； 2、等待用户输入回车， 3、回车后，采集数据并显示，按Ctrl+c中断，或按SDL窗口关闭程序，否则一直显示 </dd></dl>
+
+</div>
+</div><p>
+<hr><h2>变量文档</h2>
+<a class="anchor" name="297f0132d2bb9504854cb18ee87d0c4b"></a><!-- doxytag: member="main.c::vd_info" ref="297f0132d2bb9504854cb18ee87d0c4b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct <a class="el" href="structvideo__info.html">video_info</a>* <a class="el" href="main_8c.html#297f0132d2bb9504854cb18ee87d0c4b">vd_info</a> = NULL          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+摄像头信息结构体 
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated at Tue Jan 25 21:25:34 2011 for 视频采集及显示 by&nbsp;
+<a href="http://www.doxygen.org/index.html">
+<img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.7.1 </small></address>
+</body>
+</html>

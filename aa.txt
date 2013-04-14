@@ -1,0 +1,38 @@
+open success!
+===============================
+
+driver:uvcvideo
+card:Vega USB 2.0 Camera.
+bus_info:0000:02:02.0
+version:256
+capability:4000001
+query capability success
+===============================
+
+format(num):1448695129
+fomat(human readable):YUYV
+width:640
+height:480
+field:1 (1 if no fields)
+bytesperline:1280
+sizeimage:614400
+colorspace:0(8 if RGB colorspace)
+private field:0
+get fomat OK!
+===============================
+
+I am ready!
+press enter key to capture and display!
+v4l2 init OK!
+===============================
+
+stream on OK!!
+===============================
+
+unable to dequeue buffer
+Error grabbing 
+stream off OK!
+===============================
+
+munmap Info[22]:Invalid argument
+Clean Up done Quit 
