@@ -38,7 +38,6 @@
  */
 int main(int argc, char* argv[])
 {
-
     capture_v4l2simple(argc, argv);
     //capture_sdl(argc, argv);
 

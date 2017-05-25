@@ -74,6 +74,7 @@ static void sig_alarm(int signum)
 {
    printf("fps=%dfps\n",fps);
    fps = 0;
+
    alarm(1);
 }
 
@@ -81,31 +82,49 @@ static int my_v4l2_process(struct video_info* vd_info)
 {
     //debug_msg("my process....\n");
     
-    // 保存为yuv格式文件
     
-    #if 0
-    int init = 0;
+    //v4l2_get_pic(vd_info);
+    
+    //return 0;
+    
+    
+    static int init = 0;
     static int cnt = 0;
-    sprintf(file_name, "%d.jpg", cnt++);
-    // strcpy(file_name, "ray.yuv");
-    if (init == 0)
+    
+    // 保存为yuv格式文件
+    if (vd_info->format != V4L2_PIX_FMT_MJPEG)
     {
+        strcpy(file_name, "ray.yuv");
+        if (init == 0)
+        {
+            fp = fopen(file_name, "w");
+            init = 1;
+            if (NULL == fp)
+                unix_error_ret("unable to open the file");
+        }
+
+        fwrite(vd_info->frame_buffer, 1, vd_info->frame_size_in, fp);
+        debug_msg("writing %d...\n", cnt);
+    }
+    // JPEG
+    else
+    {
+        sprintf(file_name, "%d.jpg", cnt++);
+
         fp = fopen(file_name, "w");
-        init = 1;
         if (NULL == fp)
-        unix_error_ret("unable to open the file");
+            unix_error_ret("unable to open the file");
+
+        fwrite(vd_info->tmp_buffer, 1, vd_info->buf.bytesused, fp);
+        debug_msg("writing %d...\n", cnt);
+        
+        if (fp)
+        {
+            fclose(fp);
+            fp = NULL;
+        }
     }
 
-    fwrite(vd_info->frame_buffer, 1, vd_info->frame_size_in, fp);
-    debug_msg("writing %d...\n", fps);
-    
-    if (fp)
-    {
-        fclose(fp);
-        fp = NULL;
-    }
-    #endif
-    
     
     return 0;
 }
