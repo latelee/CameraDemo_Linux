@@ -31,6 +31,9 @@
  */
 #include "v4l2uvc.h"
 #include "utils.h"
+
+static v4l2_process_cb_ptr v4l2_processcb = v4l2_process;
+
 /** 
  * v4l2_open - 打开摄像头
  * 
@@ -41,8 +44,11 @@
  */
 int v4l2_open(struct video_info* vd_info)
 {
+    if (!strcmp(vd_info->name, ""))
+        strcpy(vd_info->name, DEFAULT_VIDEO);
+
     /* open it --no block */
-    vd_info->camfd = open(device, O_RDWR | O_NONBLOCK, 0);
+    vd_info->camfd = open(vd_info->name, /*O_RDWR | O_NONBLOCK*/ O_RDWR|O_CLOEXEC, 0);
     if (vd_info->camfd < 0)
         unix_error_ret("can not open the device");
     debug_msg("open success!\n");
@@ -50,6 +56,8 @@ int v4l2_open(struct video_info* vd_info)
 
     return 0;
 }
+
+extern int release_rk30(struct video_info* vd_info);
 
 /** 
  * v4l2_close - 关闭摄像头，并释放内存
@@ -65,15 +73,28 @@ int v4l2_close(struct video_info* vd_info)
         v4l2_off(vd_info);
 
     if (vd_info->frame_buffer)
-        free(vd_info->frame_buffer);
-    if (vd_info->tmp_buffer)
-        free(vd_info->tmp_buffer);
-    vd_info->frame_buffer = NULL;
-    /* it is a good thing to unmap! */
-    for (i = 0; i < NB_BUFFER; i++)
     {
-        if (-1 == munmap(vd_info->mem[i], vd_info->buf.length))
-            unix_error_ret("munmap");
+        free(vd_info->frame_buffer);
+        vd_info->frame_buffer = NULL;
+    }
+    if (vd_info->tmp_buffer)
+    {
+        free(vd_info->tmp_buffer);
+        vd_info->tmp_buffer = NULL;
+    }
+
+#ifdef PLATFORM_RK30
+    release_rk30(vd_info);
+#endif
+    if (vd_info->mem_mapped)
+    {
+        for (i = 0; i < NB_BUFFER; i++)
+        {
+            printf("munamp[%d]...\n", i);
+            if (vd_info->mem[i])
+                if (-1 == munmap(vd_info->mem[i], vd_info->buf.length))
+                    unix_error_ret("munmap");
+        }
     }
 
     close(vd_info->camfd);
@@ -82,26 +103,11 @@ int v4l2_close(struct video_info* vd_info)
     return 0;
 }
 
-/** 
- * v4l2_init - 以指定参数初始化摄像头，该函数包括了打开摄像头
- * 
- * @param vd_info 摄像头信息结构体
- * @param format  摄像头支持的格式，如V4L2_PIX_FMT_YUYV
- * @param width   图像宽，如640
- * @param height  图像高，如480
- * 
- * @return 成功初始化则返回0，否则返回-1，并提示出错信息
- */
-int v4l2_init(struct video_info* vd_info, uint32 format,
-              uint32 width, uint32 height)
+static int malloc_userdata(struct video_info* vd_info)
 {
-    int i;
-    /* initialize sth */
-    vd_info->format	= format;
-    vd_info->width	= width;
-    vd_info->height	= height;
-    vd_info->is_quit = 0;
+    // 默认w*h*2，即YUV422格式，后面根据实际情况填写
     vd_info->frame_size_in = (vd_info->width * vd_info->height << 1);
+    //printf("will alloc size: %d\n", vd_info->frame_size_in);
     switch (vd_info->format)    /** 'format' will be also ok */
     {
     case V4L2_PIX_FMT_MJPEG:
@@ -115,21 +121,33 @@ int v4l2_init(struct video_info* vd_info, uint32 format,
             unix_error_ret("unable alloc frame_buffer");
         break;
     case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV61:
+        vd_info->frame_buffer =
+            (uint8 *)calloc(1,(size_t)vd_info->frame_size_in);
+        if (vd_info->frame_buffer == NULL)
+            unix_error_ret("unable alloc frame_buffer");
+        break;
+
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV21:
+        vd_info->frame_size_in = (vd_info->width * vd_info->height * 3 / 2);
+        //printf("will alloc size: %d\n", vd_info->frame_size_in);
         vd_info->frame_buffer =
             (uint8 *)calloc(1,(size_t)vd_info->frame_size_in);
         if (vd_info->frame_buffer == NULL)
             unix_error_ret("unable alloc frame_buffer");
         break;
     default:
-        msg_out("error!\n");
+        msg_out("v4l2 init error! not support format: 0x%x\n", vd_info->format);
         return -1;
         break;
     }
-    /* open it tag: try nonblock*/
-    vd_info->camfd = open(device, O_RDWR | O_NONBLOCK, 0);
-    if (vd_info->camfd < 0)
-        unix_error_ret("can not open the device");
-
+    
+    return 0;
+}
+static int setformat(struct video_info* vd_info)
+{
     if (-1 == ioctl(vd_info->camfd, VIDIOC_QUERYCAP, &vd_info->cap))
         unix_error_ret("query camera failed");
     if (0 == (vd_info->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
@@ -142,13 +160,19 @@ int v4l2_init(struct video_info* vd_info, uint32 format,
     /* it would be safe to use 'v4l2_format' */
     memset(&vd_info->fmt, 0, sizeof(struct v4l2_format));
     vd_info->fmt.type		= V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    vd_info->fmt.fmt.pix.width	= width;
-    vd_info->fmt.fmt.pix.height	= height;
+    vd_info->fmt.fmt.pix.width	= vd_info->width;
+    vd_info->fmt.fmt.pix.height	= vd_info->height;
     vd_info->fmt.fmt.pix.field	=V4L2_FIELD_ANY;
-    vd_info->fmt.fmt.pix.pixelformat = format;
+    vd_info->fmt.fmt.pix.pixelformat = vd_info->format;
     if (-1 == ioctl(vd_info->camfd, VIDIOC_S_FMT, &vd_info->fmt))
         unix_error_ret("unable to set format ");
+    
+    return 0;
+}
 
+static int request_buffer_normal(struct video_info* vd_info)
+{
+    int i = 0;
     /* request buffers */
     memset(&vd_info->rb, 0, sizeof(struct v4l2_requestbuffers));
     vd_info->rb.count	= NB_BUFFER; /* 4 buffers */
@@ -166,8 +190,8 @@ int v4l2_init(struct video_info* vd_info, uint32 format,
         vd_info->buf.memory = V4L2_MEMORY_MMAP;
         if (-1 == ioctl(vd_info->camfd, VIDIOC_QUERYBUF, &vd_info->buf))
             unix_error_ret("unable to query buffer");
-        /*debug_msg("length: %u offset: %u\n",
-          vd_info->buf.length, vd_info->buf.m.offset);*/
+        debug_msg("length: %u offset: %u\n",
+          vd_info->buf.length, vd_info->buf.m.offset);
         /* map it, 0 means anywhere */
         vd_info->mem[i] =
             mmap(0, vd_info->buf.length, PROT_READ, MAP_SHARED,
@@ -188,6 +212,62 @@ int v4l2_init(struct video_info* vd_info, uint32 format,
         if (-1 == ioctl(vd_info->camfd, VIDIOC_QBUF, &vd_info->buf))
             unix_error_ret("unable to queue the buffers");
     }
+    
+    vd_info->mem_mapped = 1;
+    return 0;
+}
+
+#ifdef PLATFORM_RK30
+extern int request_buffer_rk30(struct video_info* vd_info);
+#endif
+
+/** 
+ * v4l2_init - 以指定参数初始化摄像头，该函数包括了打开摄像头
+ * 
+ * @param vd_info 摄像头信息结构体
+ * @param format  摄像头支持的格式，如V4L2_PIX_FMT_YUYV
+ * @param width   图像宽，如640
+ * @param height  图像高，如480
+ * 
+ * @return 成功初始化则返回0，否则返回-1，并提示出错信息
+ */
+int v4l2_init(struct video_info* vd_info)
+{
+    int ret = 0;
+    
+    vd_info->is_quit = 0;
+    
+    ret = malloc_userdata(vd_info);
+    if (ret < 0)
+        unix_error_ret("malloc_userdata failed");
+    
+    ret = v4l2_open(vd_info);
+    if (ret < 0)
+        unix_error_ret("v4l2_open failed");
+
+    ret = setformat(vd_info);
+    if (ret < 0)
+        unix_error_ret("setformat failed");
+
+#ifdef PLATFORM_RK30
+    if (vd_info->format == V4L2_PIX_FMT_MJPEG)
+    {
+        ret = request_buffer_normal(vd_info);
+        if (ret < 0)
+            unix_error_ret("request_buffer_normal failed");
+    }
+    else
+    {
+        ret = request_buffer_rk30(vd_info);
+        if (ret < 0)
+            unix_error_ret("request_buffer_rk30 failed");
+    }
+
+#else
+    ret = request_buffer_normal(vd_info);
+    if (ret < 0)
+        unix_error_ret("request_buffer_normal failed");
+#endif
     debug_msg("v4l2 init OK!\n");
     debug_msg("===============================\n\n");
 
@@ -255,6 +335,7 @@ int v4l2_get_pic(struct video_info* vd_info)
     return 0;
 }
 
+
 /** 
  * v4l2_process - 摄像头数据处理
  * 
@@ -262,7 +343,7 @@ int v4l2_get_pic(struct video_info* vd_info)
  * 
  * @return 成功则返回0，否则返回-1，并提示出错信息
  * @note 如果摄像头为MJPEG格式，则可以直接将tmp_buff的数据写到文件，
-         保存为jpg格式，即为一张图片。
+         保存为jpg格式，即为一张图片。这里只是默认空处理
  */
 int v4l2_process(struct video_info* vd_info)
 {
@@ -278,13 +359,22 @@ int v4l2_process(struct video_info* vd_info)
     fwrite(vd_info->tmp_buffer, vd_info->width, vd_info->height*2, fp);
     debug_msg("writing...\n");
     fclose(fp);
-
     #endif
+    
+    //debug_msg("default process func...\n");
+    
     return 0;
 }
 
+int v4l2_set_processcb(v4l2_process_cb_ptr ptr)
+{
+    v4l2_processcb =  ptr;
+    
+    return 0;
+}
+
+
 /** 
- * 
  * v4l2_grab - 采集摄像头数据
  * 
  * @param vd_info 摄像头信息结构体
@@ -300,16 +390,18 @@ int v4l2_grab(struct video_info* vd_info)
         if (v4l2_on(vd_info))  /* failed */
             goto err;
     }
+
     /* msg_out("start...\n"); */
     memset(&vd_info->buf, 0, sizeof(struct v4l2_buffer));
     vd_info->buf.type	= V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    vd_info->buf.memory = V4L2_MEMORY_MMAP;
+    vd_info->buf.memory = V4L2_MEMORY_MMAP;//V4L2_MEMORY_OVERLAY; //V4L2_MEMORY_MMAP;
     /* get data from buffers */
     if (-1 == ioctl(vd_info->camfd, VIDIOC_DQBUF, &vd_info->buf))
     {
-        msg_out("unable to dequeue buffer\n");
+        perror("unable to dequeue buffer\n");
         goto err;
     }
+
     switch (vd_info->format)
     {
     case V4L2_PIX_FMT_MJPEG:
@@ -331,6 +423,11 @@ int v4l2_grab(struct video_info* vd_info)
         }
         break;
     case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV21:
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV61:
+        //break;
         if (vd_info->buf.bytesused > vd_info->frame_size_in)
             memcpy(vd_info->frame_buffer, vd_info->mem[vd_info->buf.index],
                    (size_t)vd_info->frame_size_in);
@@ -344,7 +441,7 @@ int v4l2_grab(struct video_info* vd_info)
     }
 
     /* here you can process the frame! */
-    v4l2_process(vd_info);
+    v4l2_processcb(vd_info);
     /* queue buffer again */
     if (-1 == ioctl(vd_info->camfd, VIDIOC_QBUF, &vd_info->buf))
     {
@@ -352,8 +449,9 @@ int v4l2_grab(struct video_info* vd_info)
         goto err;
     }
 
-    debug_msg("frame:%d\n", count++);
-    debug_msg("frame size in: %d KB\n", vd_info->frame_size_in>>10);
+    //debug_msg("frame:%d\n", count++);
+    // vd_info->buf.bytesused
+    //debug_msg("frame size in: %d %d (%dKB)\n", vd_info->buf.bytesused, vd_info->frame_size_in, vd_info->frame_size_in>>10);
 
     return 0;
 err:
@@ -476,7 +574,7 @@ int v4l2_get_format(struct video_info* vd_info)
      * ??? glic???
      */
     vd_info->format = vd_info->fmt.fmt.pix.pixelformat;
-    debug_msg("format(num):%d\n",vd_info->format);
+    debug_msg("format(num):0x%x\n",vd_info->format);
 
 	/*
      * pixel fmt is 32 bit
@@ -493,9 +591,13 @@ int v4l2_get_format(struct video_info* vd_info)
     /* get more information here */
     vd_info->width 		= vd_info->fmt.fmt.pix.width;
     vd_info->height 		= vd_info->fmt.fmt.pix.height;
+    
+    // field参考v4l2_field
     vd_info->field 		= vd_info->fmt.fmt.pix.field;
     vd_info->bytes_per_line= vd_info->fmt.fmt.pix.bytesperline;
     vd_info->size_image 	= vd_info->fmt.fmt.pix.sizeimage;
+    
+    // colorspace参考枚举类型v4l2_colorspace 7表示JPEG 8表示RGB
     vd_info->color_space 	= vd_info->fmt.fmt.pix.colorspace;
     vd_info->priv		= vd_info->fmt.fmt.pix.priv;
     debug_msg("width:%d\n",vd_info->width);
