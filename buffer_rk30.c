@@ -161,7 +161,7 @@ static int mmap_buffer_rk30(struct video_info* vd_info)
     vd_info->rb.count	= NB_BUFFER; /* 4 buffers */
     vd_info->rb.type	= V4L2_BUF_TYPE_VIDEO_CAPTURE;
     // MJPEG格式的，使用MMAP
-    if (vd_info->format == V4L2_PIX_FMT_MJPEG)
+    if (vd_info->driver_type == V4L2_DRIVER_UVC)
     {
         vd_info->rb.memory	= V4L2_MEMORY_MMAP;
     }

@@ -32,13 +32,38 @@
  */
 
 #include <signal.h>
-#include "v4l2uvc.h"
- 
-#ifdef CAPTURE_FB
+#include <linux/fb.h>
 
+#include "v4l2uvc.h"
 
 /** 摄像头信息结构体 */
-struct video_info* vd_info = NULL;
+static struct video_info* vd_info = NULL;
+static int fps = 0;
+static int g_fmt = 0;
+static int g_width = 0;
+static int g_height = 0;
+
+static enum v4l2_driver_type g_driver_type = V4L2_DRIVER_UNKNOWN;
+
+static int iDispFd =-1;
+
+#define DISP_DEV_NAME    "/dev/graphics/fb0"
+
+#define FBIOSET_ENABLE			0x5019	
+
+#define  FB_NONSTAND 0x20
+
+#define RK_FBIOSET_CONFIG_DONE		0x4628
+#define RK_FBIOPUT_COLOR_KEY_CFG	0x4626
+struct color_key_cfg {
+	unsigned int win0_color_key_cfg;
+	unsigned int win1_color_key_cfg;
+	unsigned int win2_color_key_cfg;
+};
+
+// 图像显示的框对应于屏的偏移量
+static int cory = 0;
+static int corx = 0;
 
 /**
  * sig_int - 信号处理函数
@@ -49,9 +74,34 @@ struct video_info* vd_info = NULL;
 static void sig_int(int signum)
 {
     debug_msg("\ncatch a SIGINT signal, you may be press Ctrl+C.\n");
-    vd_info->is_quit = 1;
     debug_msg("ready to quit\n");
+    if (vd_info == NULL)
+        goto end;
 
+    vd_info->is_quit = 1;
+    // stop....
+    v4l2_close(vd_info);
+    
+    if (iDispFd > 0)
+    {
+		int disable = 0;
+		printf("Close disp\n");
+		ioctl(iDispFd, FBIOSET_ENABLE,&disable);
+		close(iDispFd);
+		iDispFd = -1;
+	}
+    
+end:
+
+    exit(0);
+}
+
+static void sig_alarm(int signum)
+{
+   printf("fps=%dfps\n",fps);
+   fps = 0;
+
+   alarm(1);
 }
 
 /**
@@ -60,66 +110,225 @@ static void sig_int(int signum)
  *
  * @return 成功返回0，否则返回－1，并提示出错信息
  */
-static int get_info(void)
+static int get_info(char* videodevice)
 {
-    vd_info = (struct video_info *) calloc(1, sizeof(struct video_info));
+    struct video_info* vd_info = (struct video_info *) calloc(1, sizeof(struct video_info));
+    strcpy(vd_info->name, videodevice);
+    
     if (v4l2_open(vd_info) <0)
 		exit(1);
     if (v4l2_get_capability(vd_info) < 0)
 		exit(1);
+    
+    if (v4l2_enum_format(vd_info) < 0)
+        exit(1);
     if (v4l2_get_format(vd_info) < 0)
 		exit(1);
     if (vd_info->is_streaming)  /* stop if it is still capturing */
-	v4l2_off(vd_info);
+        v4l2_off(vd_info);
 
+    g_fmt = vd_info->format;
+    g_width = vd_info->width;
+    g_height = vd_info->height;
+    g_driver_type = vd_info->driver_type;
+    
+    
     if (vd_info->frame_buffer)
 	free(vd_info->frame_buffer);
     if (vd_info->tmp_buffer)
 	free(vd_info->tmp_buffer);
     vd_info->frame_buffer = NULL;
-    close(vd_info->camfd);
+    
+    v4l2_close(vd_info);
 
     free(vd_info);
 
     return 0;
 }
 
-/**
- * display - 使用FB显示图像
- *
- *
- * @return 成功返回0，否则返回－1，并提示出错信息
- * @note todo
- */
-static int display(void)
+static int my_v4l2_process(struct video_info* vd_info)
 {
+    //debug_msg("my process....\n");
+	int data[2];
+	struct fb_var_screeninfo var ;
+    // tmp...
+
+    
+    // 注：根据fb要求，这里指定的是buffer的offset。由内核fb驱动读取对应的数据
+    data[0] = (int)vd_info->buf.m.offset;
+    data[1] = (int)(data[0] + g_width * g_height);
+
+    if (ioctl(iDispFd, 0x5002, data) == -1)
+    {
+       printf("%s ioctl fb1 queuebuf fail!\n",__FUNCTION__);
+       return -1;
+    }
+
+    if (ioctl(iDispFd, FBIOGET_VSCREENINFO, &var) == -1)
+    {
+        printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+        return -1;
+    }
+
+    var.xres_virtual = g_width;	//win0 memery x size
+    var.yres_virtual = g_height;	 //win0 memery y size
+    var.xoffset = 0;   //win0 start x in memery
+    var.yoffset = 0;   //win0 start y in memery
+    var.nonstd = ((cory<<20)&0xfff00000) + (( corx<<8)&0xfff00) +FB_NONSTAND;
+    var.grayscale = ((g_height<<20)&0xfff00000) + (( g_width<<8)&0xfff00) + 0;   //win0 xsize & ysize
+    var.xres = g_width;	 //win0 show x size
+    var.yres = g_height;	 //win0 show y size
+    var.bits_per_pixel = 16;
+    var.activate = FB_ACTIVATE_FORCE;
+    if (ioctl(iDispFd, FBIOPUT_VSCREENINFO, &var) == -1)
+    {
+        printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+        return -1;
+    }
+    if (ioctl(iDispFd,RK_FBIOSET_CONFIG_DONE, NULL) < 0)
+    {
+        perror("set config done failed");
+    }
+    
     return 0;
 }
 
+int create_display(int corx ,int cory,int preview_w,int preview_h)
+{
+	int err = 0;
+	struct fb_var_screeninfo var;
+	unsigned int panelsize[2];
+	struct color_key_cfg clr_key_cfg;
+
+	if(iDispFd !=-1)
+		goto exit;
+	iDispFd = open(DISP_DEV_NAME,O_RDWR, 0);
+	if (iDispFd < 0) {
+		printf("%s Could not open display device\n",__FUNCTION__);
+		err = -1;
+		goto exit;
+	}
+	if(ioctl(iDispFd, 0x5001, panelsize) < 0)
+	{
+		printf("%s Failed to get panel size\n",__FUNCTION__);
+		err = -1;
+		goto exit1;
+	}
+	if(panelsize[0] == 0 || panelsize[1] ==0)
+	{
+		panelsize[0] = preview_w;
+		panelsize[1] = preview_h;
+	}
+
+	if (ioctl(iDispFd, FBIOGET_VSCREENINFO, &var) == -1) {
+		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+		err = -1;
+		goto exit;
+	}
+	printf("preview_w = %d,preview_h =%d,panelsize[1] = %d,panelsize[0] = %d\n",preview_w,preview_h,panelsize[1],panelsize[0]);
+	//var.xres_virtual = preview_w;	//win0 memery x size
+	//var.yres_virtual = preview_h;	 //win0 memery y size
+	var.xoffset = 0;   //win0 start x in memery
+	var.yoffset = 0;   //win0 start y in memery
+	var.nonstd = ((cory<<20)&0xfff00000) + ((corx<<8)&0xfff00) +FB_NONSTAND; //win0 ypos & xpos & format (ypos<<20 + xpos<<8 + format)
+	var.grayscale = ((preview_h<<20)&0xfff00000) + (( preview_w<<8)&0xfff00) + 0;	//win0 xsize & ysize
+	var.xres = preview_w;	 //win0 show x size
+	var.yres = preview_h;	 //win0 show y size
+	var.bits_per_pixel = 16;
+	var.activate = FB_ACTIVATE_FORCE;
+	
+	printf("var.nonstd=%d, var.grayscale=%d....\n",var.nonstd,var.grayscale);  
+	printf("var.xres=%d, var.yres=%d....\n",var.xres,var.yres); 
+	
+	if (ioctl(iDispFd, FBIOPUT_VSCREENINFO, &var) == -1) {
+		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+		err = -1;
+		goto exit;
+	}
+	
+	clr_key_cfg.win0_color_key_cfg = 0;		//win0 color key disable
+	clr_key_cfg.win1_color_key_cfg = 0x01000000; 	// win1 color key enable
+	clr_key_cfg.win2_color_key_cfg = 0;  
+	if (ioctl(iDispFd,RK_FBIOPUT_COLOR_KEY_CFG, &clr_key_cfg) == -1)
+    {
+        printf("%s set fb color key failed!\n",__FUNCTION__);
+        err = -1;
+    }
+
+	return 0;
+exit1:
+	if (iDispFd > 0)
+	{
+		close(iDispFd);
+		iDispFd = -1;
+	}
+exit:
+	return err;
+}
+
+
 /**
- * capture_fb - 捕获摄像头并显示在FB设备上
+ * capture_fb - 采集并显示在framebuffer上
  *
  * @return 成功返回0，否则返回－1，并提示出错信息
- * @note 测试过程 \n
+ * @note 
  * 1、先获取摄像头相关信息；
- * 2、等待用户输入回车，
- * 3、回车后，采集数据并显示，按Ctrl+c中断，或按SDL窗口关闭程序，否则一直显示
+ * 
  */
 int capture_fb(int argc, char* argv[])
 {
+    char videodevice[16] = {0};
+    strcpy(videodevice, "/dev/video0");
+    if (argc == 2)
+    {
+        strcpy(videodevice, argv[1]);
+    }
+    printf("willl open %s\n", videodevice);
     signal(SIGINT, sig_int);
-    get_info();
-    msg_out("I am ready!\n");
-    msg_out("press enter key to capture and display!\n");
+    
+    get_info(videodevice);
+
+    // 在按回车之前捕获摄像头信息，之后继续后面的事
+    msg_out("press enter key to capture !\n");
     getchar();
 
-    display();
+    signal(SIGALRM, sig_alarm);
+	alarm(1);
+
+    vd_info = (struct video_info *) calloc(1, sizeof(struct video_info));
+
+    strcpy(vd_info->name, videodevice);
+    
+    vd_info->format	= g_fmt; //V4L2_PIX_FMT_YUYV; //g_fmt; //g_fmt; //V4L2_PIX_FMT_NV21;//V4L2_PIX_FMT_MJPEG; //V4L2_PIX_FMT_NV12;
+    vd_info->width	= 640; //g_width; // 640
+    vd_info->height	= 480;//g_height; //480;
+    vd_info->driver_type = g_driver_type;
+
+    
+    printf("====info video fmt: 0x%x res: %dx%d driver type: %d\n", 
+            vd_info->format, vd_info->width, vd_info->height, vd_info->driver_type);
+            
+    v4l2_set_processcb(my_v4l2_process);
+    
+    if (v4l2_init(vd_info) < 0)
+        return -1;
+    
+    create_display(corx, cory, vd_info->width, vd_info->height);
+    
+    while (1)
+    {
+        if (v4l2_grab(vd_info) < 0)
+        {
+            printf("Error grabbing \n");
+            //break;
+        }
+        
+        fps++;
+    }
+    
+    v4l2_close(vd_info);
+
+    free(vd_info);
+    
     return 0;
 }
-#else
-int capture_fb(int argc, char* argv[])
-{
-    msg_out("framebuffer not available here, exiting..\n");
-    return 0;
-}
-#endif

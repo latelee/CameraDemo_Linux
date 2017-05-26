@@ -51,37 +51,49 @@
 #define DEBUG
 #include "debug-msg.h"
 
-/** 缓冲区个数 */
+// 缓冲区个数 TODO：改为参数
 #define NB_BUFFER 4
 
 // 默认的
 #define DEFAULT_VIDEO "/dev/video0"
 
+// 驱动类型
+enum v4l2_driver_type {
+    V4L2_DRIVER_UNKNOWN = 0,
+    V4L2_DRIVER_UVC = 1,
+    V4L2_DRIVER_RK30 = 2,
+
+};
+    
 /** 自定义的摄像头信息结构体 */
 struct video_info
 {
     char name[16];              /**< 摄像头文件，由调用者指定，否则使用默认值 */
     int camfd;                  /**< 摄像头文件描述符，由open系统调用指定 */
-    struct v4l2_capability cap;	/**< 摄像头capability(属性) */
-    struct v4l2_format fmt;	    /**<  摄像头格式，使用该结构体对摄像头进行设置 */
-    struct v4l2_requestbuffers rb;	/**< 请求缓冲，一般不超过5个 */
-    struct v4l2_buffer buf;	    /**< buffer */
-    enum v4l2_buf_type type;	/**< 控制命令字？ */
+    enum v4l2_driver_type driver_type; /**< 驱动类型 1:uvc 2:其它 */
+    uint32 format;              /**< 摄像头支持的格式，如MJPEG、YUYV等 */
+    int width;                  /**< 图像宽 */
+    int height;	                /**< 图像高 */
+    int is_streaming;           /**< 开始采集 */
+    int is_quit;                /**< 退出 */
+
     void* mem[NB_BUFFER];       /**< main buffers */
     int mem_mapped;             /**< 标志所有的mem是否均由mmap申请 */
     uint8* tmp_buffer;          /**< 临时缓冲区，针对MJPEG格式而设 */
     uint8* frame_buffer;        /**< 一帧图像缓冲区 */
     uint32 frame_size_in;	    /**< 一帧图像大小(如果是yuv422格式，大小为宽*高*2) */
 
-    uint32 format;              /**< 摄像头支持的格式，如MJPEG、YUYV等 */
-    int width;                  /**< 图像宽 */
-    int height;	                /**< 图像高 */
-    int is_streaming;           /**< 开始采集 */
-    int is_quit;                /**< 退出显示 */
-
-    enum v4l2_field field;
     uint32 bytes_per_line;
     uint32 size_image;
+    
+    struct v4l2_capability cap;	/**< 摄像头capability(属性) */
+    struct v4l2_format fmt;	    /**<  摄像头格式，使用该结构体对摄像头进行设置 */
+    struct v4l2_requestbuffers rb;	/**< 请求缓冲，一般不超过5个 */
+    struct v4l2_buffer buf;	    /**< buffer */
+    enum v4l2_buf_type type;	/**< 控制命令字？ */
+
+    enum v4l2_field field;
+
     enum v4l2_colorspace color_space;
     uint32 priv;
 };
@@ -107,8 +119,10 @@ int v4l2_process(struct video_info* vd_info);
 int v4l2_get_pic(struct video_info* vd_info);
 
 int v4l2_get_capability(struct video_info* vd_info);
+int v4l2_enum_format(struct video_info* vd_info);
 int v4l2_get_format(struct video_info* vd_info);
 int v4l2_set_foramt(struct video_info* vd_info,
                     uint32 width, uint32 height,uint32 format);
+
 
 #endif  /* _V4L2UVC_H */

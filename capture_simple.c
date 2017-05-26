@@ -42,8 +42,9 @@ int g_width = 0;
 int g_height = 0;
 
 FILE* fp = NULL;
-char* file_name[16] = {0}; // = "raw.yuv";
+char file_name[16] = {0}; // = "raw.yuv";
 
+enum v4l2_driver_type g_driver_type = V4L2_DRIVER_UNKNOWN;
 /**
  * sig_int - 信号处理函数
  *
@@ -85,7 +86,7 @@ static int my_v4l2_process(struct video_info* vd_info)
     
     //v4l2_get_pic(vd_info);
     
-    //return 0;
+    return 0;
     
     
     static int init = 0;
@@ -144,6 +145,9 @@ static int get_info(char* videodevice)
 		exit(1);
     if (v4l2_get_capability(vd_info) < 0)
 		exit(1);
+    
+    if (v4l2_enum_format(vd_info) < 0)
+        exit(1);
     if (v4l2_get_format(vd_info) < 0)
 		exit(1);
     if (vd_info->is_streaming)  /* stop if it is still capturing */
@@ -152,6 +156,8 @@ static int get_info(char* videodevice)
     g_fmt = vd_info->format;
     g_width = vd_info->width;
     g_height = vd_info->height;
+    g_driver_type = vd_info->driver_type;
+    
     
     if (vd_info->frame_buffer)
 	free(vd_info->frame_buffer);
@@ -198,12 +204,15 @@ int capture_v4l2simple(int argc, char* argv[])
 
     strcpy(vd_info->name, videodevice);
     
-    vd_info->format	= g_fmt; //g_fmt; //V4L2_PIX_FMT_NV21;//V4L2_PIX_FMT_MJPEG; //V4L2_PIX_FMT_NV12;
-    vd_info->width	= g_width; // 680
-    vd_info->height	= g_height; //480;
+    vd_info->format	= V4L2_PIX_FMT_YUYV; //g_fmt; //g_fmt; //V4L2_PIX_FMT_NV21;//V4L2_PIX_FMT_MJPEG; //V4L2_PIX_FMT_NV12;
+    vd_info->width	= 640; //g_width; // 640
+    vd_info->height	= 480;//g_height; //480;
+    vd_info->driver_type = g_driver_type;
 
     
-    printf("got video fmt: 0x%x res: %dx%d\n", vd_info->format, vd_info->width, vd_info->height);
+    printf("====info video fmt: 0x%x res: %dx%d driver type: %d\n", 
+            vd_info->format, vd_info->width, vd_info->height, vd_info->driver_type);
+            
     v4l2_set_processcb(my_v4l2_process);
     
     if (v4l2_init(vd_info) < 0)
@@ -214,7 +223,7 @@ int capture_v4l2simple(int argc, char* argv[])
         if (v4l2_grab(vd_info) < 0)
         {
             printf("Error grabbing \n");
-            break;
+            //break;
         }
         
         fps++;

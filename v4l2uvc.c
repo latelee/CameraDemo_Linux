@@ -48,7 +48,7 @@ int v4l2_open(struct video_info* vd_info)
         strcpy(vd_info->name, DEFAULT_VIDEO);
 
     /* open it --no block */
-    vd_info->camfd = open(vd_info->name, /*O_RDWR | O_NONBLOCK*/ O_RDWR|O_CLOEXEC, 0);
+    vd_info->camfd = open(vd_info->name, O_RDWR /*| O_NONBLOCK | O_CLOEXEC*/, 0);
     if (vd_info->camfd < 0)
         unix_error_ret("can not open the device");
     debug_msg("open success!\n");
@@ -120,7 +120,12 @@ static int malloc_userdata(struct video_info* vd_info)
         if (vd_info->frame_buffer == NULL)
             unix_error_ret("unable alloc frame_buffer");
         break;
+    case V4L2_PIX_FMT_YUV422P:
     case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_YYUV:
+    case V4L2_PIX_FMT_YVYU:
+    case V4L2_PIX_FMT_UYVY:
+    case V4L2_PIX_FMT_VYUY:
     case V4L2_PIX_FMT_NV16:
     case V4L2_PIX_FMT_NV61:
         vd_info->frame_buffer =
@@ -128,7 +133,7 @@ static int malloc_userdata(struct video_info* vd_info)
         if (vd_info->frame_buffer == NULL)
             unix_error_ret("unable alloc frame_buffer");
         break;
-
+    case V4L2_PIX_FMT_YVU420:
     case V4L2_PIX_FMT_NV12:
     case V4L2_PIX_FMT_NV21:
         vd_info->frame_size_in = (vd_info->width * vd_info->height * 3 / 2);
@@ -249,8 +254,9 @@ int v4l2_init(struct video_info* vd_info)
     if (ret < 0)
         unix_error_ret("setformat failed");
 
+    
 #ifdef PLATFORM_RK30
-    if (vd_info->format == V4L2_PIX_FMT_MJPEG)
+    if (vd_info->driver_type == V4L2_DRIVER_UVC) // UVC驱动使用普通的mmap // || vd_info->format == V4L2_PIX_FMT_MJPEG)
     {
         ret = request_buffer_normal(vd_info);
         if (ret < 0)
@@ -423,6 +429,10 @@ int v4l2_grab(struct video_info* vd_info)
         }
         break;
     case V4L2_PIX_FMT_YUYV:
+    case V4L2_PIX_FMT_YYUV:
+    case V4L2_PIX_FMT_YVYU:
+    case V4L2_PIX_FMT_UYVY:
+    case V4L2_PIX_FMT_VYUY:
     case V4L2_PIX_FMT_NV12:
     case V4L2_PIX_FMT_NV21:
     case V4L2_PIX_FMT_NV16:
@@ -517,6 +527,11 @@ int v4l2_get_capability(struct video_info* vd_info)
     memset(&vd_info->cap, 0, sizeof(struct v4l2_capability));
     if ( -1 == ioctl(vd_info->camfd, VIDIOC_QUERYCAP,&(vd_info->cap)))
         unix_error_ret("VIDIOC_QUERYCAP");
+    
+    if (!strncmp(vd_info->cap.driver, "uvc", 3))
+    {
+        vd_info->driver_type = V4L2_DRIVER_UVC; // UVC驱动
+    }
     debug_msg("driver:%s\n",vd_info->cap.driver);
     debug_msg("card:%s\n",vd_info->cap.card);
     debug_msg("bus_info:%s\n",vd_info->cap.bus_info);
@@ -528,9 +543,122 @@ int v4l2_get_capability(struct video_info* vd_info)
      */
 
     debug_msg("capability:%x\n",vd_info->cap.capabilities);
+    
+    v4l2_std_id std;
+    int ret = 0;
+    do {
+        ret = ioctl(vd_info->camfd, VIDIOC_QUERYSTD, &std);
+    } while (ret == -1 && errno == EAGAIN);
+    printf("get std: 0x%x NTSC: 0x%x PAL: 0x%x\n", std, V4L2_STD_NTSC, V4L2_STD_PAL);
+    switch (std){
+        case V4L2_STD_NTSC:
+            printf("NTSC.\n");
+        break;
+        case V4L2_STD_PAL:
+            printf("PAL.\n");
+        break;
+    }
+
     debug_msg("query capability success\n");
     debug_msg("===============================\n\n");
 
+    return 0;
+}
+
+static int enum_frame_sizes(int dev, int pixfmt, int idx)
+{
+    int ret;
+    struct v4l2_frmsizeenum fsize;
+    memset(&fsize, 0, sizeof(fsize));
+    fsize.index = idx;
+    fsize.pixel_format = pixfmt;
+    while ((ret = ioctl(dev, VIDIOC_ENUM_FRAMESIZES, &fsize)) == 0)
+    {
+        //printf("%s: type: %d\n", __func__, fsize.type);
+        if (fsize.type == V4L2_FRMSIZE_TYPE_DISCRETE)
+        {
+            printf("{ discrete: width = %u, height = %u}\n",
+                   fsize.discrete.width, fsize.discrete.height);
+
+            // get frame rate
+            // ret = enum_frame_intervals(dev,pixfmt,fsize.discrete.width,
+            //    fsize.discrete.height);
+
+            if (ret != 0)
+            {
+                printf("  Unable to enumerate frame sizes.\n");
+            }
+        }
+        else if (fsize.type == V4L2_FRMSIZE_TYPE_CONTINUOUS)
+        {
+            printf("{ continuous: min { width = %u, height = %u } .. "
+                   "max { width = %u, height = %u } }\n",
+                   fsize.stepwise.min_width, 
+                   fsize.stepwise.min_height,
+                   fsize.stepwise.max_width, 
+                   fsize.stepwise.max_height);
+            printf("  Refusing to enumerate frame intervals.\n");
+            break;
+        }
+        else if (fsize.type == V4L2_FRMSIZE_TYPE_STEPWISE)
+        {
+            printf("{ stepwise: min { width = %u, height = %u } .. "
+                   "max { width = %u, height = %u } / "
+                   "stepsize { width = %u, height = %u } }\n",
+                   fsize.stepwise.min_width, 
+                   fsize.stepwise.min_height,
+                   fsize.stepwise.max_width, 
+                   fsize.stepwise.max_height,
+                   fsize.stepwise.step_width,
+                   fsize.stepwise.step_height);
+            printf("  Refusing to enumerate frame intervals.\n");
+            break;
+        }
+        else
+        {
+            printf("no type");
+        }
+        fsize.index++;
+    }
+    
+    return 0;
+    // 如果出错，则不打印信息
+    if (ret != 0 || errno != EINVAL)
+    {
+        printf("ERROR enumerating frame sizes: %d\n", errno);
+        return errno;
+    }
+    return 0;
+}
+
+int v4l2_enum_format(struct video_info* vd_info)
+{
+    struct v4l2_fmtdesc fmt_desc;
+    int ret = -1;
+
+    memset(&fmt_desc, 0, sizeof(struct v4l2_fmtdesc));
+    fmt_desc.index=0;
+    fmt_desc.type= V4L2_BUF_TYPE_VIDEO_CAPTURE; //V4L2_BUF_TYPE_VIDEO_CAPTURE; 
+
+    printf("Support format:\n");
+    while((ret = ioctl(vd_info->camfd, VIDIOC_ENUM_FMT, &fmt_desc)) != -1)
+    {
+        
+        printf("%d.%s\n",fmt_desc.index,fmt_desc.description);
+        printf("{ pixelformat = ''%c%c%c%c'', description = ''%s'' }\n", \
+        fmt_desc.pixelformat & 0xFF, \
+        (fmt_desc.pixelformat >> 8) & 0xFF, \
+        (fmt_desc.pixelformat >> 16) & 0xFF, \
+        (fmt_desc.pixelformat >> 24) & 0xFF,\
+        fmt_desc.description);
+        ret = enum_frame_sizes(vd_info->camfd, fmt_desc.pixelformat, fmt_desc.index);
+        if (ret != 0)
+            printf("Unable to enumerate frame sizes\n");
+        
+        fmt_desc.index++;
+    }
+    
+    debug_msg("===============================\n\n");
     return 0;
 }
 
@@ -548,7 +676,6 @@ int v4l2_get_capability(struct video_info* vd_info)
  */
 int v4l2_get_format(struct video_info* vd_info)
 {
-
     /* see what format it has */
     /*
      * I have two camera,
@@ -607,6 +734,8 @@ int v4l2_get_format(struct video_info* vd_info)
     debug_msg("sizeimage:%d\n",vd_info->size_image);
     debug_msg("colorspace:%d(8 if RGB colorspace)\n",vd_info->color_space);
     debug_msg("private field:%d\n",vd_info->priv);
+    
+    
     debug_msg("get fomat OK!\n");
     debug_msg("===============================\n\n");
 
