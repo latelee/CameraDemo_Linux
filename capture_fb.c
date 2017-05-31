@@ -66,6 +66,8 @@ static int g_need_display = 0;
 #define FBIOSET_ENABLE			0x5019	
 
 #define  FB_NONSTAND 0x20   // 这个实际是显示屏的格式，0x20表示VN12 0x10表示NV16
+static int g_fb_fmt = FB_NONSTAND;
+
 
 #define RK_FBIOSET_CONFIG_DONE		0x4628
 #define RK_FBIOPUT_COLOR_KEY_CFG	0x4626
@@ -246,12 +248,11 @@ static int my_display_process(struct video_info* vd_info)
         return -1;
     }
 
-    // to check...
     var.xres_virtual = g_width;	//win0 memery x size
     var.yres_virtual = g_height;	 //win0 memery y size
     var.xoffset = 0;   //win0 start x in memery
     var.yoffset = 0;   //win0 start y in memery
-    var.nonstd = ((cory<<20)&0xfff00000) + (( corx<<8)&0xfff00) +FB_NONSTAND;
+    var.nonstd = ((cory<<20)&0xfff00000) + (( corx<<8)&0xfff00) +g_fb_fmt;
     var.grayscale = ((g_height<<20)&0xfff00000) + (( g_width<<8)&0xfff00) + 0;   //win0 xsize & ysize
     var.xres = g_width;	 //win0 show x size
     var.yres = g_height;	 //win0 show y size
@@ -262,6 +263,7 @@ static int my_display_process(struct video_info* vd_info)
         printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
         return -1;
     }
+    
     if (ioctl(g_dispfd,RK_FBIOSET_CONFIG_DONE, NULL) < 0)
     {
         perror("set config done failed");
@@ -336,7 +338,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	//var.yres_virtual = preview_h;	 //win0 memery y size
 	var.xoffset = 0;   //win0 start x in memery
 	var.yoffset = 0;   //win0 start y in memery
-	var.nonstd = ((cory<<20)&0xfff00000) + ((corx<<8)&0xfff00) +FB_NONSTAND; //win0 ypos & xpos & format (ypos<<20 + xpos<<8 + format)
+	var.nonstd = ((cory<<20)&0xfff00000) + ((corx<<8)&0xfff00) +g_fb_fmt; //win0 ypos & xpos & format (ypos<<20 + xpos<<8 + format)
 	var.grayscale = ((preview_h<<20)&0xfff00000) + (( preview_w<<8)&0xfff00) + 0;	//win0 xsize & ysize
 	var.xres = preview_w;	 //win0 show x size
 	var.yres = preview_h;	 //win0 show y size
@@ -450,7 +452,10 @@ int parsecmd(int argc, char *argv[])
                 else if (strcasecmp(g_fmt_name, "nv21") == 0)
                     g_fmt = V4L2_PIX_FMT_NV21;
                 else if (strcasecmp(g_fmt_name, "nv16") == 0)
+                {
                     g_fmt = V4L2_PIX_FMT_NV16;
+                    g_fb_fmt = 0x10; // nv16
+                }
                 else if (strcasecmp(g_fmt_name, "nv61") == 0)
                     g_fmt = V4L2_PIX_FMT_NV61;
                 else if (strcasecmp(g_fmt_name, "mjpeg") == 0)

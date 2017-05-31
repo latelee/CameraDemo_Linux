@@ -49,6 +49,8 @@ struct ion_allocation_data ionAllocData;
 struct ion_fd_data fd_data;
 struct ion_handle_data handle_data;
 
+static int total_size = 0x260000; // 足够yuv422格式缓冲区4个
+
 static int iPmemFd = -1;
 
 // 通过ion申请内存
@@ -66,7 +68,7 @@ static int malloc_buffer_rk30(struct video_info* vd_info)
         goto exit1;
     }
     
-    ionAllocData.len = 0x200000;//vd_info->frame_size_in;  ???
+    ionAllocData.len = total_size; //vd_info->frame_size_in;  ???
     
     printf("ionAllocData.len: %d\n", ionAllocData.len);
     ionAllocData.align = 4*1024; // 4K ??
