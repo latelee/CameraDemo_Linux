@@ -195,7 +195,7 @@ static int request_buffer_normal(struct video_info* vd_info)
         vd_info->buf.memory = V4L2_MEMORY_MMAP;
         if (-1 == ioctl(vd_info->camfd, VIDIOC_QUERYBUF, &vd_info->buf))
             unix_error_ret("unable to query buffer");
-        debug_msg("length: %u offset: %u\n",
+        debug_msg("length: %u offset: %p\n",
           vd_info->buf.length, vd_info->buf.m.offset);
         /* map it, 0 means anywhere */
         vd_info->mem[i] =
@@ -204,7 +204,7 @@ static int request_buffer_normal(struct video_info* vd_info)
         /* MAP_FAILED = (void *)-1 */
         if (MAP_FAILED == vd_info->mem[i])
             unix_error_ret("unable to map buffer");
-        // debug_msg("buffer mapped in addr:%p.\n", vd_info->mem[i]);
+        debug_msg("buffer mapped in addr:%p.\n", vd_info->mem[i]);
     }
 
     /* queue the buffers */
@@ -391,6 +391,8 @@ int v4l2_grab(struct video_info* vd_info)
 {
 #define HEADFRAME1 0xaf
     static int count = 0;
+    int rett;
+    
     if (!vd_info->is_streaming) /* if stream is off, start it */
     {
         if (v4l2_on(vd_info))  /* failed */
@@ -401,8 +403,10 @@ int v4l2_grab(struct video_info* vd_info)
     memset(&vd_info->buf, 0, sizeof(struct v4l2_buffer));
     vd_info->buf.type	= V4L2_BUF_TYPE_VIDEO_CAPTURE;
     vd_info->buf.memory = V4L2_MEMORY_MMAP;//V4L2_MEMORY_OVERLAY; //V4L2_MEMORY_MMAP;
+    rett = ioctl(vd_info->camfd, VIDIOC_DQBUF, &vd_info->buf);
+    //printf("DQBUF ret: %d: %d:%s\n", rett, errno, strerror(errno));
     /* get data from buffers */
-    if (-1 == ioctl(vd_info->camfd, VIDIOC_DQBUF, &vd_info->buf))
+    if (-1 == rett)
     {
         perror("unable to dequeue buffer\n");
         goto err;
@@ -419,14 +423,16 @@ int v4l2_grab(struct video_info* vd_info)
         /* we can save tmp_buff to a jpg file,just write it! */
         memcpy(vd_info->tmp_buffer, vd_info->mem[vd_info->buf.index],
                vd_info->buf.bytesused);
-
+        //printf("decoding frame %d...\n", count);
         /* here decode MJPEG,so we can dispaly it */
+        // tocheck：在一款摄像头，解码输出的是yuyv格式(非平面)
         if (jpeg_decode(&vd_info->frame_buffer, vd_info->tmp_buffer,
                         &vd_info->width, &vd_info->height) < 0 )
         {
             msg_out("decode jpeg error\n");
             goto err;
         }
+        
         break;
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YYUV:
@@ -437,7 +443,6 @@ int v4l2_grab(struct video_info* vd_info)
     case V4L2_PIX_FMT_NV21:
     case V4L2_PIX_FMT_NV16:
     case V4L2_PIX_FMT_NV61:
-        //break;
         if (vd_info->buf.bytesused > vd_info->frame_size_in)
             memcpy(vd_info->frame_buffer, vd_info->mem[vd_info->buf.index],
                    (size_t)vd_info->frame_size_in);
@@ -463,6 +468,7 @@ int v4l2_grab(struct video_info* vd_info)
     // vd_info->buf.bytesused
     //debug_msg("frame size in: %d %d (%dKB)\n", vd_info->buf.bytesused, vd_info->frame_size_in, vd_info->frame_size_in>>10);
 
+    count++;
     return 0;
 err:
     vd_info->is_quit = 1;

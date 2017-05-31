@@ -35,6 +35,7 @@
 #include <linux/fb.h>
 
 #include "v4l2uvc.h"
+#include "utils.h"
 
 /** 摄像头信息结构体 */
 static struct video_info* vd_info = NULL;
@@ -45,13 +46,16 @@ static int g_height = 0;
 
 static enum v4l2_driver_type g_driver_type = V4L2_DRIVER_UNKNOWN;
 
-static int iDispFd =-1;
+static FILE* fp = NULL;
+static char file_name[16] = "raw.yuv";
+
+static int g_dispfd =-1;
 
 #define DISP_DEV_NAME    "/dev/graphics/fb0"
 
 #define FBIOSET_ENABLE			0x5019	
 
-#define  FB_NONSTAND 0x20
+#define  FB_NONSTAND 0x20   // 这个实际是显示屏的格式，0x20表示VN12 0x10表示NV16
 
 #define RK_FBIOSET_CONFIG_DONE		0x4628
 #define RK_FBIOPUT_COLOR_KEY_CFG	0x4626
@@ -82,16 +86,21 @@ static void sig_int(int signum)
     // stop....
     v4l2_close(vd_info);
     
-    if (iDispFd > 0)
+    if (g_dispfd > 0)
     {
 		int disable = 0;
 		printf("Close disp\n");
-		ioctl(iDispFd, FBIOSET_ENABLE,&disable);
-		close(iDispFd);
-		iDispFd = -1;
+		ioctl(g_dispfd, FBIOSET_ENABLE,&disable);
+		close(g_dispfd);
+		g_dispfd = -1;
 	}
     
 end:
+    if (fp)
+    {
+        fclose(fp);
+        fp = NULL;
+    }
 
     exit(0);
 }
@@ -146,25 +155,83 @@ static int get_info(char* videodevice)
     return 0;
 }
 
-static int my_v4l2_process(struct video_info* vd_info)
+// todo：由用户指定保存为什么格式
+static int my_save_file(struct video_info* vd_info)
 {
-    //debug_msg("my process....\n");
-	int data[2];
-	struct fb_var_screeninfo var ;
-    // tmp...
+    static int init = 0;
+    static int cnt = 0;
+    
+    
+    // JPEG
+    if (vd_info->format == V4L2_PIX_FMT_MJPEG)
+    {
+        sprintf(file_name, "%d.jpg", cnt);
 
+        fp = fopen(file_name, "w");
+        if (NULL == fp)
+            unix_error_ret("unable to open the file");
+
+        //fwrite(vd_info->tmp_buffer, 1, vd_info->buf.bytesused, fp);
+        fwrite(vd_info->tmp_buffer, 1, g_width*g_height*3/2, fp);
+        
+        
+        if (fp)
+        {
+            fclose(fp);
+            fp = NULL;
+        }
+    }
+    // 保存为yuv格式文件
+    else
+    {
+        //strcpy(file_name, "raw.yuv");
+        sprintf(file_name, "%d.yuv", cnt);
+        if (0 || init == 0)
+        {
+            fp = fopen(file_name, "w");
+            init = 1;
+            if (NULL == fp)
+                unix_error_ret("unable to open the file");
+        }
+
+        fwrite(/*vd_info->frame_buffer*/vd_info->mem[vd_info->buf.index], 1, vd_info->frame_size_in, fp);
+        if (0 && fp)
+        {
+            fclose(fp);
+            fp = NULL;
+        }
+        
+    }
+    debug_msg("writing %d...\n", cnt);
+    cnt++;
+    
+    return 0;
+}
+
+static int my_display_process(struct video_info* vd_info)
+{
+    int data[2];
+	struct fb_var_screeninfo var;
     
     // 注：根据fb要求，这里指定的是buffer的offset。由内核fb驱动读取对应的数据
+    // 数据格式为yuv420sp
+    
+    //printf("put addr %p to kernel idx: %d.\n", vd_info->buf.m.offset, vd_info->buf.index);
+    // tmp...
+    
+    //yuyv2yuv420sp(vd_info->tmp_buffer, vd_info->frame_buffer, g_width, g_height);
+    //my_save_file(vd_info);
+    
     data[0] = (int)vd_info->buf.m.offset;
     data[1] = (int)(data[0] + g_width * g_height);
 
-    if (ioctl(iDispFd, 0x5002, data) == -1)
+    if (ioctl(g_dispfd, 0x5002, data) == -1)
     {
        printf("%s ioctl fb1 queuebuf fail!\n",__FUNCTION__);
        return -1;
     }
 
-    if (ioctl(iDispFd, FBIOGET_VSCREENINFO, &var) == -1)
+    if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1)
     {
         printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
         return -1;
@@ -180,15 +247,45 @@ static int my_v4l2_process(struct video_info* vd_info)
     var.yres = g_height;	 //win0 show y size
     var.bits_per_pixel = 16;
     var.activate = FB_ACTIVATE_FORCE;
-    if (ioctl(iDispFd, FBIOPUT_VSCREENINFO, &var) == -1)
+    if (ioctl(g_dispfd, FBIOPUT_VSCREENINFO, &var) == -1)
     {
         printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
         return -1;
     }
-    if (ioctl(iDispFd,RK_FBIOSET_CONFIG_DONE, NULL) < 0)
+    if (ioctl(g_dispfd,RK_FBIOSET_CONFIG_DONE, NULL) < 0)
     {
         perror("set config done failed");
     }
+    
+    return 0;
+}
+static int my_v4l2_process(struct video_info* vd_info)
+{
+    //debug_msg("my process....\n");
+	
+
+    //return 0;
+    
+    my_display_process(vd_info);
+    
+    #if 0
+    // tmp...
+    int i = 0;
+    char* ptr = vd_info->tmp_buffer;
+    ptr = vd_info->frame_buffer;
+    if (ptr)
+    {
+        for (i = 1; i < 16*3 + 1; i++)
+        {
+            printf("%x ", ptr[i]);
+            if (i%16 == 0) printf("\n");
+        }
+    }
+    
+    
+    my_save_file(vd_info);
+    return 0;
+    #endif
     
     return 0;
 }
@@ -200,15 +297,15 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	unsigned int panelsize[2];
 	struct color_key_cfg clr_key_cfg;
 
-	if(iDispFd !=-1)
+	if(g_dispfd !=-1)
 		goto exit;
-	iDispFd = open(DISP_DEV_NAME,O_RDWR, 0);
-	if (iDispFd < 0) {
+	g_dispfd = open(DISP_DEV_NAME,O_RDWR, 0);
+	if (g_dispfd < 0) {
 		printf("%s Could not open display device\n",__FUNCTION__);
 		err = -1;
 		goto exit;
 	}
-	if(ioctl(iDispFd, 0x5001, panelsize) < 0)
+	if(ioctl(g_dispfd, 0x5001, panelsize) < 0)
 	{
 		printf("%s Failed to get panel size\n",__FUNCTION__);
 		err = -1;
@@ -220,7 +317,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 		panelsize[1] = preview_h;
 	}
 
-	if (ioctl(iDispFd, FBIOGET_VSCREENINFO, &var) == -1) {
+	if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1) {
 		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
 		err = -1;
 		goto exit;
@@ -240,7 +337,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	printf("var.nonstd=%d, var.grayscale=%d....\n",var.nonstd,var.grayscale);  
 	printf("var.xres=%d, var.yres=%d....\n",var.xres,var.yres); 
 	
-	if (ioctl(iDispFd, FBIOPUT_VSCREENINFO, &var) == -1) {
+	if (ioctl(g_dispfd, FBIOPUT_VSCREENINFO, &var) == -1) {
 		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
 		err = -1;
 		goto exit;
@@ -249,7 +346,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	clr_key_cfg.win0_color_key_cfg = 0;		//win0 color key disable
 	clr_key_cfg.win1_color_key_cfg = 0x01000000; 	// win1 color key enable
 	clr_key_cfg.win2_color_key_cfg = 0;  
-	if (ioctl(iDispFd,RK_FBIOPUT_COLOR_KEY_CFG, &clr_key_cfg) == -1)
+	if (ioctl(g_dispfd,RK_FBIOPUT_COLOR_KEY_CFG, &clr_key_cfg) == -1)
     {
         printf("%s set fb color key failed!\n",__FUNCTION__);
         err = -1;
@@ -257,10 +354,10 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 
 	return 0;
 exit1:
-	if (iDispFd > 0)
+	if (g_dispfd > 0)
 	{
-		close(iDispFd);
-		iDispFd = -1;
+		close(g_dispfd);
+		g_dispfd = -1;
 	}
 exit:
 	return err;
@@ -319,7 +416,7 @@ int capture_fb(int argc, char* argv[])
     {
         if (v4l2_grab(vd_info) < 0)
         {
-            printf("Error grabbing \n");
+            printf("Error grabbing will continue\n");
             //break;
         }
         

@@ -43,3 +43,5 @@ int
 get_picture(unsigned char *buf,int size);
 int
 get_pictureYV2(unsigned char *buf,int width,int height);
+
+void yuyv2yuv420sp(unsigned char* yuv420sp, unsigned char* yuv, int width, int height);

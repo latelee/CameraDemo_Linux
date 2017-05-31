@@ -95,7 +95,7 @@ static int my_v4l2_process(struct video_info* vd_info)
     // 保存为yuv格式文件
     if (vd_info->format != V4L2_PIX_FMT_MJPEG)
     {
-        strcpy(file_name, "ray.yuv");
+        strcpy(file_name, "raw.yuv");
         if (init == 0)
         {
             fp = fopen(file_name, "w");

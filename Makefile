@@ -22,7 +22,7 @@
 ###############################################################################
 
 # !!!=== cross compile...
-CROSS_COMPILE = arm-fsl-linux-gnueabi-
+CROSS_COMPILE ?= arm-fsl-linux-gnueabi-
 
 CC  = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
@@ -83,7 +83,7 @@ CFLAGS += -DCAPTURE_SAVEMJPEG
 endif
 
 
-CFLAGS += -DPLATFORM_RK30
+CFLAGS += -DPLATFORM_RK30 -mfpu=neon
 
 # !!!===
 INC1 = ./

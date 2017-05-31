@@ -415,6 +415,7 @@ int jpeg_decode(unsigned char **pic, unsigned char *buf, int *width,
     }
 
 
+    //printf("find hv 0x%x %dx%d\n", dscans[0].hv, *width,*height);
     switch (dscans[0].hv) {
     case 0x22: // 411
     	mb=6;
@@ -1261,4 +1262,49 @@ if(name){
 free(picture);
 picture = NULL;
 return 0;
+}
+
+void yuyv2yuv420sp(unsigned char* yuv420sp, unsigned char* yuv, int width, int height)
+{
+	int i = 0;
+	int j = 0;
+	int k = 0;
+	unsigned char* p_y;
+	unsigned char* p_uv;
+	unsigned char* p_yuv;
+	int yuv_size = 0;
+
+	int idxy = 0;
+	int idxu = 0;
+	int idxv = 0;
+	int out_idxu = 0;
+	int out_idxv = 1;
+
+	p_yuv = yuv;
+
+	p_y = yuv420sp;
+	p_uv = p_y + width * height;
+	yuv_size = width * height * 2;
+
+    // 格式
+    idxy = 0; // y
+    idxu = 1; // u
+              // y
+    idxv = 3; // v
+
+	// Y分量 ，每个Y元素均需要
+	for (i = 0, j = 0; i < yuv_size; i += 2, j++)
+	{
+		p_y[j] = p_yuv[idxy + i];
+	}
+	// UV分量
+	for (i = 0; i < height; i += 2) // 隔行提取，从而实现从422到420转换
+	{
+		for (j = 0; j < width * 2; j += 4) // 扫描所有元素(大小为w*h*2)，故这里宽为w+2，一次处理4个字节
+		{
+			p_uv[k + out_idxu] = p_yuv[j + i*width * 2 + idxu];
+			p_uv[k + out_idxv] = p_yuv[j + i*width * 2 + idxv];
+			k += 2;
+		}
+	}
 }
