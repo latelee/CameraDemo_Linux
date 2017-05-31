@@ -408,7 +408,7 @@ int v4l2_grab(struct video_info* vd_info)
     /* get data from buffers */
     if (-1 == rett)
     {
-        perror("unable to dequeue buffer\n");
+        perror("unable to dequeue buffer: ");
         goto err;
     }
 

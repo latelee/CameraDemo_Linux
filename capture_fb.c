@@ -30,7 +30,8 @@
  *         在程序目录中直接输入\p make 即可编译生成\p capture 可执行文件。\n
  *
  */
-
+#include <strings.h>
+#include <ctype.h>
 #include <signal.h>
 #include <linux/fb.h>
 
@@ -40,16 +41,25 @@
 /** 摄像头信息结构体 */
 static struct video_info* vd_info = NULL;
 static int fps = 0;
-static int g_fmt = 0;
-static int g_width = 0;
-static int g_height = 0;
-
+static int g_fmt = -1;
+static char g_fmt_name[16] = {0};
+static int g_width = -1;
+static int g_height = -1;
+static char videodevice[16] = {0};
 static enum v4l2_driver_type g_driver_type = V4L2_DRIVER_UNKNOWN;
 
+enum SAVE_FILE_T{
+    SVAETYPE_YUV = 0,
+    SVAETYPE_JPG,
+};
+
+static int g_save_type = -1;
 static FILE* fp = NULL;
 static char file_name[16] = "raw.yuv";
 
 static int g_dispfd =-1;
+
+static int g_need_display = 0;
 
 #define DISP_DEV_NAME    "/dev/graphics/fb0"
 
@@ -59,6 +69,7 @@ static int g_dispfd =-1;
 
 #define RK_FBIOSET_CONFIG_DONE		0x4628
 #define RK_FBIOPUT_COLOR_KEY_CFG	0x4626
+
 struct color_key_cfg {
 	unsigned int win0_color_key_cfg;
 	unsigned int win1_color_key_cfg;
@@ -68,6 +79,8 @@ struct color_key_cfg {
 // 图像显示的框对应于屏的偏移量
 static int cory = 0;
 static int corx = 0;
+
+int g_debug;
 
 /**
  * sig_int - 信号处理函数
@@ -136,9 +149,14 @@ static int get_info(char* videodevice)
     if (vd_info->is_streaming)  /* stop if it is still capturing */
         v4l2_off(vd_info);
 
-    g_fmt = vd_info->format;
-    g_width = vd_info->width;
-    g_height = vd_info->height;
+    // 用户没有指定格式/分辨率，则从获取到的值中拿
+    if (g_fmt == -1)
+        g_fmt = vd_info->format;
+    if (g_width == -1)
+        g_width = vd_info->width;
+    if (g_height == -1)
+        g_height = vd_info->height;
+
     g_driver_type = vd_info->driver_type;
     
     
@@ -161,9 +179,26 @@ static int my_save_file(struct video_info* vd_info)
     static int init = 0;
     static int cnt = 0;
     
-    
+    if (g_save_type == SVAETYPE_YUV)
+    {
+        sprintf(file_name, "raw.yuv");
+        if (init == 0)
+        {
+            fp = fopen(file_name, "w");
+            init = 1;
+            if (NULL == fp)
+                unix_error_ret("unable to open the file");
+        }
+
+        fwrite(vd_info->frame_buffer, 1, vd_info->frame_size_in, fp);
+        if (0 && fp)
+        {
+            fclose(fp);
+            fp = NULL;
+        }
+    }
     // JPEG
-    if (vd_info->format == V4L2_PIX_FMT_MJPEG)
+    else if (g_save_type == SVAETYPE_JPG)
     {
         sprintf(file_name, "%d.jpg", cnt);
 
@@ -171,8 +206,8 @@ static int my_save_file(struct video_info* vd_info)
         if (NULL == fp)
             unix_error_ret("unable to open the file");
 
-        //fwrite(vd_info->tmp_buffer, 1, vd_info->buf.bytesused, fp);
-        fwrite(vd_info->tmp_buffer, 1, g_width*g_height*3/2, fp);
+        fwrite(vd_info->tmp_buffer, 1, vd_info->buf.bytesused, fp);
+        //fwrite(vd_info->tmp_buffer, 1, g_width*g_height*3/2, fp);
         
         
         if (fp)
@@ -181,28 +216,8 @@ static int my_save_file(struct video_info* vd_info)
             fp = NULL;
         }
     }
-    // 保存为yuv格式文件
-    else
-    {
-        //strcpy(file_name, "raw.yuv");
-        sprintf(file_name, "%d.yuv", cnt);
-        if (0 || init == 0)
-        {
-            fp = fopen(file_name, "w");
-            init = 1;
-            if (NULL == fp)
-                unix_error_ret("unable to open the file");
-        }
 
-        fwrite(/*vd_info->frame_buffer*/vd_info->mem[vd_info->buf.index], 1, vd_info->frame_size_in, fp);
-        if (0 && fp)
-        {
-            fclose(fp);
-            fp = NULL;
-        }
-        
-    }
-    debug_msg("writing %d...\n", cnt);
+    debug_msg("writing frame %d...\n", cnt);
     cnt++;
     
     return 0;
@@ -214,13 +229,7 @@ static int my_display_process(struct video_info* vd_info)
 	struct fb_var_screeninfo var;
     
     // 注：根据fb要求，这里指定的是buffer的offset。由内核fb驱动读取对应的数据
-    // 数据格式为yuv420sp
-    
-    //printf("put addr %p to kernel idx: %d.\n", vd_info->buf.m.offset, vd_info->buf.index);
-    // tmp...
-    
-    //yuyv2yuv420sp(vd_info->tmp_buffer, vd_info->frame_buffer, g_width, g_height);
-    //my_save_file(vd_info);
+    // 数据格式为yuv420sp或422sp
     
     data[0] = (int)vd_info->buf.m.offset;
     data[1] = (int)(data[0] + g_width * g_height);
@@ -233,10 +242,11 @@ static int my_display_process(struct video_info* vd_info)
 
     if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1)
     {
-        printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+        printf("%s ioctl fb1 FBIOGET_VSCREENINFO fail!\n",__FUNCTION__);
         return -1;
     }
 
+    // to check...
     var.xres_virtual = g_width;	//win0 memery x size
     var.yres_virtual = g_height;	 //win0 memery y size
     var.xoffset = 0;   //win0 start x in memery
@@ -264,10 +274,6 @@ static int my_v4l2_process(struct video_info* vd_info)
     //debug_msg("my process....\n");
 	
 
-    //return 0;
-    
-    my_display_process(vd_info);
-    
     #if 0
     // tmp...
     int i = 0;
@@ -281,12 +287,15 @@ static int my_v4l2_process(struct video_info* vd_info)
             if (i%16 == 0) printf("\n");
         }
     }
-    
-    
-    my_save_file(vd_info);
-    return 0;
     #endif
     
+    if (g_need_display)
+        my_display_process(vd_info);
+    
+
+    if (g_save_type != -1)
+        my_save_file(vd_info);
+
     return 0;
 }
 
@@ -363,6 +372,150 @@ exit:
 	return err;
 }
 
+void usage(char* name)
+{
+    printf("%s: A video capture tool for rk30 platform version: 1.0\n\n", name);
+    printf("usage:\n");
+    printf("%s -i [device] -s [format] -w [width] -h [height] -f [save file] --fb(display to framebuffer)\n", name);
+    printf("\t -i\tvideo device, eg:/dev/video0\n");
+    printf("\t -s\tvideo format, eg:[mjpeg|yuyv|nv12|nv21|nv16|nv61]\n");
+    printf("\t -w\tvideo width, eg:640\n");
+    printf("\t -h\tvideo height, eg:480\n");
+    printf("\t -f\tsave file(yuv or jpg file), eg:[yuv|jpg]\n");
+    printf("\t --fb\tdisplay video to frame buffer device\n");
+    printf("\t --help\t show help info\n");
+    printf("default: %s -i /dev/video0 -w 640 -h 480\n", name);
+    
+    exit(0);
+}
+
+
+int parsecmd(int argc, char *argv[])
+{
+    int i = 0;
+
+    strcpy(videodevice, "/dev/video0");
+
+    if (argc > 1) {
+        for (i = 1; i < argc; i++)
+        {
+            if ((strcmp(argv[i], "-D")==0) || (strcmp(argv[i], "--debug")==0))
+            {
+                g_debug = 1;
+            }
+        }
+    }
+    
+    // 
+    /* parse parameters, maybe not the best way but... */
+    for (i = 1; i < argc; i++)
+    {
+        if (g_debug)
+            printf("arg %d: \"%s\"\n",i,argv[i]);
+        // help
+        if (strcmp(argv[i],"--help")==0)
+        {
+            usage(argv[0]);
+            return 0;
+        }
+        // debug
+        else if ((strcmp(argv[i],"-D")==0) || (strcmp(argv[i],"--debug")==0))
+        {
+            g_debug=1;
+        } 
+        // string
+        else if ((strcmp(argv[i],"-i")==0))
+        {
+            if (i+1<argc)
+            {
+                strncpy(videodevice, argv[i+1], 16);
+                if (g_debug)
+                    printf("Used videodevice: %s\n", videodevice);
+                i++;
+                continue;
+            } else {
+                printf("Error: videodevice for -i missing.\n");
+                return 1;
+            }
+        }
+        else if ((strcmp(argv[i],"-s")==0))
+        {
+            if (i+1<argc)
+            {
+                strncpy(g_fmt_name, argv[i+1], 16);
+                if (strcasecmp(g_fmt_name, "nv12") == 0)
+                    g_fmt = V4L2_PIX_FMT_NV12;
+                else if (strcasecmp(g_fmt_name, "nv12") == 0)
+                    g_fmt = V4L2_PIX_FMT_NV12;
+                else if (strcasecmp(g_fmt_name, "nv21") == 0)
+                    g_fmt = V4L2_PIX_FMT_NV21;
+                else if (strcasecmp(g_fmt_name, "nv16") == 0)
+                    g_fmt = V4L2_PIX_FMT_NV16;
+                else if (strcasecmp(g_fmt_name, "nv61") == 0)
+                    g_fmt = V4L2_PIX_FMT_NV61;
+                else if (strcasecmp(g_fmt_name, "mjpeg") == 0)
+                    g_fmt = V4L2_PIX_FMT_MJPEG;
+                else if (strcasecmp(g_fmt_name, "yuyv") == 0)
+                    g_fmt = V4L2_PIX_FMT_YUYV;
+                // to add....
+                
+                if (g_debug)
+                    printf("Used format: %s(0x%x)\n", g_fmt_name, g_fmt);
+                i++;
+                continue;
+            }
+        }
+        else if ((strcmp(argv[i],"-f")==0))
+        {
+            if (i+1<argc)
+            {
+                if (strcasecmp(argv[i+1], "yuv") == 0)
+                    g_save_type = SVAETYPE_YUV;
+                else if (strcasecmp(argv[i+1], "jpg") == 0)
+                    g_save_type = SVAETYPE_JPG;
+                // to add....
+                
+                if (g_debug)
+                    printf("Used format: %s(0x%x)\n", argv[i+1], g_save_type);
+                i++;
+                continue;
+            }
+        }
+        // number
+        else if ((strcmp(argv[i],"-w")==0) || (strcmp(argv[i],"--width"))==0)
+        {
+            if (i+1<argc && isdigit(argv[i+1][0])) {
+                g_width = atoi(argv[i+1]);
+                if (g_debug)
+                    printf("width: %d\n", g_width);
+                i++;
+                continue;
+            }
+        }
+        else if ((strcmp(argv[i],"-h")==0) || (strcmp(argv[i],"--height"))==0)
+        {
+            if (i+1<argc && isdigit(argv[i+1][0])) {
+                g_height = atoi(argv[i+1]);
+                if (g_debug)
+                    printf("height: %d\n", g_height);
+                i++;
+                continue;
+            }
+        }
+        // only one
+        else if (strcmp(argv[i],"--fb")==0)
+        {
+            g_need_display = 1;
+        }
+        else
+        {
+            printf("Unknown parameter \"%s\". Use -h for help.\n",argv[i]);
+            return 1;
+        }
+    }
+    
+    return 0;
+}
 
 /**
  * capture_fb - 采集并显示在framebuffer上
@@ -374,12 +527,8 @@ exit:
  */
 int capture_fb(int argc, char* argv[])
 {
-    char videodevice[16] = {0};
-    strcpy(videodevice, "/dev/video0");
-    if (argc == 2)
-    {
-        strcpy(videodevice, argv[1]);
-    }
+    parsecmd(argc, argv);
+    
     printf("willl open %s\n", videodevice);
     signal(SIGINT, sig_int);
     
@@ -397,8 +546,8 @@ int capture_fb(int argc, char* argv[])
     strcpy(vd_info->name, videodevice);
     
     vd_info->format	= g_fmt; //V4L2_PIX_FMT_YUYV; //g_fmt; //g_fmt; //V4L2_PIX_FMT_NV21;//V4L2_PIX_FMT_MJPEG; //V4L2_PIX_FMT_NV12;
-    vd_info->width	= 640; //g_width; // 640
-    vd_info->height	= 480;//g_height; //480;
+    vd_info->width	= g_width; //g_width; // 640
+    vd_info->height	= g_height;//g_height; //480;
     vd_info->driver_type = g_driver_type;
 
     
@@ -410,7 +559,8 @@ int capture_fb(int argc, char* argv[])
     if (v4l2_init(vd_info) < 0)
         return -1;
     
-    create_display(corx, cory, vd_info->width, vd_info->height);
+    if (g_need_display)
+        create_display(corx, cory, vd_info->width, vd_info->height);
     
     while (1)
     {
