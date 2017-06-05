@@ -196,7 +196,7 @@ static int request_buffer_normal(struct video_info* vd_info)
         if (-1 == ioctl(vd_info->camfd, VIDIOC_QUERYBUF, &vd_info->buf))
             unix_error_ret("unable to query buffer");
         debug_msg("length: %u offset: %p\n",
-          vd_info->buf.length, vd_info->buf.m.offset);
+          vd_info->buf.length, (void*)vd_info->buf.m.offset);
         /* map it, 0 means anywhere */
         vd_info->mem[i] =
             mmap(0, vd_info->buf.length, PROT_READ, MAP_SHARED,
@@ -412,6 +412,7 @@ int v4l2_grab(struct video_info* vd_info)
         goto err;
     }
 
+    vd_info->frame_format = vd_info->format; // 数据帧格式一般与设备摄像头的格式一致，但也有例外
     switch (vd_info->format)
     {
     case V4L2_PIX_FMT_MJPEG:
@@ -432,7 +433,7 @@ int v4l2_grab(struct video_info* vd_info)
             msg_out("decode jpeg error\n");
             goto err;
         }
-        
+        vd_info->frame_format = V4L2_PIX_FMT_YUYV; // jpeg_decode解码得到的是YUYV格式
         break;
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YYUV:
@@ -534,7 +535,7 @@ int v4l2_get_capability(struct video_info* vd_info)
     if ( -1 == ioctl(vd_info->camfd, VIDIOC_QUERYCAP,&(vd_info->cap)))
         unix_error_ret("VIDIOC_QUERYCAP");
     
-    if (!strncmp(vd_info->cap.driver, "uvc", 3))
+    if (!strncmp((char*)vd_info->cap.driver, "uvc", 3))
     {
         vd_info->driver_type = V4L2_DRIVER_UVC; // UVC驱动
     }
@@ -555,7 +556,7 @@ int v4l2_get_capability(struct video_info* vd_info)
     do {
         ret = ioctl(vd_info->camfd, VIDIOC_QUERYSTD, &std);
     } while (ret == -1 && errno == EAGAIN);
-    printf("get std: 0x%x NTSC: 0x%x PAL: 0x%x\n", std, V4L2_STD_NTSC, V4L2_STD_PAL);
+    printf("get std: 0x%llx NTSC: 0x%llx PAL: 0x%llx\n", std, V4L2_STD_NTSC, V4L2_STD_PAL);
     switch (std){
         case V4L2_STD_NTSC:
             printf("NTSC.\n");

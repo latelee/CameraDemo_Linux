@@ -82,6 +82,7 @@ struct video_info
     uint8* tmp_buffer;          /**< 临时缓冲区，针对MJPEG格式而设 */
     uint8* frame_buffer;        /**< 一帧图像缓冲区 */
     uint32 frame_size_in;	    /**< 一帧图像大小(如果是yuv422格式，大小为宽*高*2) */
+    uint32 frame_format;        /**< 图像缓冲区数据的格式，如YUYV、NV12. */
 
     uint32 bytes_per_line;
     uint32 size_image;

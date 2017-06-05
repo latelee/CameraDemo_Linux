@@ -38,6 +38,10 @@
 #include "v4l2uvc.h"
 #include "utils.h"
 
+#include "fb_utils.h"
+#include "yuv2rgb.h"
+
+
 /** 摄像头信息结构体 */
 static struct video_info* vd_info = NULL;
 static int fps = 0;
@@ -111,6 +115,7 @@ static void sig_int(int signum)
 	}
     
 end:
+    fb_release();
     if (fp)
     {
         fclose(fp);
@@ -225,7 +230,7 @@ static int my_save_file(struct video_info* vd_info)
     return 0;
 }
 
-static int my_display_process(struct video_info* vd_info)
+static int my_display_process1(struct video_info* vd_info)
 {
     int data[2];
 	struct fb_var_screeninfo var;
@@ -271,13 +276,76 @@ static int my_display_process(struct video_info* vd_info)
     
     return 0;
 }
+
+static int my_display_process(struct video_info* vd_info)
+{
+    static unsigned char* rgb_buffer = NULL;
+    unsigned char* tmp_p = NULL;
+    int rgb_size = 0;
+    int width = 0;
+    int height = 0;
+    int x = 0;
+    int y = 0;
+    
+    width = vd_info->width;
+    height = vd_info->height;
+    rgb_size = width*height*3;
+    
+    if (rgb_buffer == NULL)
+    {
+        rgb_buffer = (unsigned char*)malloc(rgb_size);
+        if (rgb_buffer == NULL)
+        {
+            return -1;
+        }
+    }
+    // 更改格式
+    if (vd_info->frame_format == V4L2_PIX_FMT_YUYV)
+    {
+        yuv_to_rgb24(FMT_YUYV, vd_info->frame_buffer, rgb_buffer, width, height);
+    }
+    if (vd_info->frame_format == V4L2_PIX_FMT_NV12)
+    {
+        yuv_to_rgb24(FMT_NV12, vd_info->frame_buffer, rgb_buffer, width, height);
+    }
+    if (vd_info->frame_format == V4L2_PIX_FMT_NV21)
+    {
+        yuv_to_rgb24(FMT_NV21, vd_info->frame_buffer, rgb_buffer, width, height);
+    }
+    if (vd_info->frame_format == V4L2_PIX_FMT_NV16)
+    {
+        yuv_to_rgb24(FMT_NV16, vd_info->frame_buffer, rgb_buffer, width, height);
+    }
+    if (vd_info->frame_format == V4L2_PIX_FMT_NV61)
+    {
+        yuv_to_rgb24(FMT_NV61, vd_info->frame_buffer, rgb_buffer, width, height);
+    }
+    
+    
+    while (y < fb->height)
+    {
+        unsigned short  color;
+        tmp_p = rgb_buffer + y*width*3;
+        for (x=0; x < fb->width; x++)
+        {
+            // LCD为rgb565格式，所以要转换
+            color = make16color(tmp_p[x*3], tmp_p[x*3+1], tmp_p[x*3+2]);
+            fb_pixel(x, y, color);
+            
+		}
+        y++;
+    }
+
+    return 0;
+}
+
 static int my_v4l2_process(struct video_info* vd_info)
 {
     //debug_msg("my process....\n");
 	
 
     #if 0
-    // tmp...
+    // 打印y值
     int i = 0;
     char* ptr = vd_info->tmp_buffer;
     ptr = vd_info->frame_buffer;
@@ -329,7 +397,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	}
 
 	if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1) {
-		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
+		printf("%s ioctl fb1 FBIOGET_VSCREENINFO fail!\n",__FUNCTION__);
 		err = -1;
 		goto exit;
 	}
@@ -342,7 +410,7 @@ int create_display(int corx ,int cory,int preview_w,int preview_h)
 	var.grayscale = ((preview_h<<20)&0xfff00000) + (( preview_w<<8)&0xfff00) + 0;	//win0 xsize & ysize
 	var.xres = preview_w;	 //win0 show x size
 	var.yres = preview_h;	 //win0 show y size
-	var.bits_per_pixel = 16;
+	var.bits_per_pixel = 24;//16; ??
 	var.activate = FB_ACTIVATE_FORCE;
 	
 	printf("var.nonstd=%d, var.grayscale=%d....\n",var.nonstd,var.grayscale);  
@@ -378,15 +446,15 @@ void usage(char* name)
 {
     printf("%s: A video capture tool for rk30 platform version: 1.0\n\n", name);
     printf("usage:\n");
-    printf("%s -i [device] -s [format] -w [width] -h [height] -f [save file] --fb(display to framebuffer)\n", name);
-    printf("\t -i\tvideo device, eg:/dev/video0\n");
+    printf("%s -d [device] -s [format] -w [width] -h [height] -f [save file] --fb(display to framebuffer)\n", name);
+    printf("\t -d\tvideo device, eg:/dev/video0\n");
     printf("\t -s\tvideo format, eg:[mjpeg|yuyv|nv12|nv21|nv16|nv61]\n");
     printf("\t -w\tvideo width, eg:640\n");
     printf("\t -h\tvideo height, eg:480\n");
     printf("\t -f\tsave file(yuv or jpg file), eg:[yuv|jpg]\n");
     printf("\t --fb\tdisplay video to frame buffer device\n");
     printf("\t --help\t show help info\n");
-    printf("default: %s -i /dev/video0 -w 640 -h 480\n", name);
+    printf("default: %s -d /dev/video0 -w 640 -h 480\n", name);
     
     exit(0);
 }
@@ -426,7 +494,7 @@ int parsecmd(int argc, char *argv[])
             g_debug=1;
         } 
         // string
-        else if ((strcmp(argv[i],"-i")==0))
+        else if ((strcmp(argv[i],"-d")==0))
         {
             if (i+1<argc)
             {
@@ -436,7 +504,7 @@ int parsecmd(int argc, char *argv[])
                 i++;
                 continue;
             } else {
-                printf("Error: videodevice for -i missing.\n");
+                printf("Error: videodevice for -d missing.\n");
                 return 1;
             }
         }
@@ -461,7 +529,10 @@ int parsecmd(int argc, char *argv[])
                 else if (strcasecmp(g_fmt_name, "mjpeg") == 0)
                     g_fmt = V4L2_PIX_FMT_MJPEG;
                 else if (strcasecmp(g_fmt_name, "yuyv") == 0)
+                {
                     g_fmt = V4L2_PIX_FMT_YUYV;
+                    g_fb_fmt = 0x10; // nv16 just for test...
+                }
                 // to add....
                 
                 if (g_debug)
@@ -565,7 +636,11 @@ int capture_fb(int argc, char* argv[])
         return -1;
     
     if (g_need_display)
-        create_display(corx, cory, vd_info->width, vd_info->height);
+    {
+        fb_init();	// must call first
+        // 标准framebuffer显示，不需要再初始化
+        //create_display(corx, cory, vd_info->width, vd_info->height);
+    }
     
     while (1)
     {
