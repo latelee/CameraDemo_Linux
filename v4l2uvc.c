@@ -83,9 +83,6 @@ int v4l2_close(struct video_info* vd_info)
         vd_info->tmp_buffer = NULL;
     }
 
-#ifdef PLATFORM_RK30
-    release_rk30(vd_info);
-#endif
     if (vd_info->mem_mapped)
     {
         for (i = 0; i < NB_BUFFER; i++)
@@ -222,10 +219,6 @@ static int request_buffer_normal(struct video_info* vd_info)
     return 0;
 }
 
-#ifdef PLATFORM_RK30
-extern int request_buffer_rk30(struct video_info* vd_info);
-#endif
-
 /** 
  * v4l2_init - 以指定参数初始化摄像头，该函数包括了打开摄像头
  * 
@@ -254,26 +247,10 @@ int v4l2_init(struct video_info* vd_info)
     if (ret < 0)
         unix_error_ret("setformat failed");
 
-    
-#ifdef PLATFORM_RK30
-    if (vd_info->driver_type == V4L2_DRIVER_UVC) // UVC驱动使用普通的mmap // || vd_info->format == V4L2_PIX_FMT_MJPEG)
-    {
-        ret = request_buffer_normal(vd_info);
-        if (ret < 0)
-            unix_error_ret("request_buffer_normal failed");
-    }
-    else
-    {
-        ret = request_buffer_rk30(vd_info);
-        if (ret < 0)
-            unix_error_ret("request_buffer_rk30 failed");
-    }
-
-#else
     ret = request_buffer_normal(vd_info);
     if (ret < 0)
         unix_error_ret("request_buffer_normal failed");
-#endif
+
     debug_msg("v4l2 init OK!\n");
     debug_msg("===============================\n\n");
 

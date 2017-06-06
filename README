@@ -1,1 +1,46 @@
-See Readme.chinese About.chinese.
+功能：
+采集UVC摄像头数据并显示在framebuffer上。同时具备保存jpeg或yuv文件功能。（根据运行参数而定）
+
+使用说明：
+1、直接运行capture，则会默认采集/dev/video0摄像头数据，打印摄像头参数信息。用户按回车键后进行循环采集，并打印帧率。
+2、如果需要显示，添加--fb参数。
+3、如果要设置采集数据格式，使用-s +格式参数，如设置yuyv：-s yuyv，设置nv12：-s nv12
+4、设置宽高分辨率：-w 宽 -h 高
+5、保存文件格式：-f yuv表示保存为yuv文件，-f jpg表示保存jpeg图片(注：每帧均为一个jpg图片)。
+6、如果以上参数均没有设置，则使用从摄像头里获取的参数。如摄像头出来是yuyv的，采集的格式就是yuyv。
+7、退出按Ctrl+C。
+
+完整说明：
+# ./capture --help
+./capture: A video capture tool for linux platform version: 1.1
+
+usage:
+./capture -d [device] -s [format] -w [width] -h [height] -f [save file] --fb(display to framebuffer)
+         -d     video device, eg:/dev/video0
+         -s     video format, eg:[mjpeg|yuyv|nv12|nv21|nv16|nv61]
+         -w     video width, eg:480
+         -h     video height, eg:320
+         -f     save file(yuv or jpg file), eg:[yuv|jpg]
+         --fb   display video to frame buffer device
+         --help  show help info
+default: ./capture -d /dev/video0 -w 480 -h 320
+
+
+设计：
+程序采用分层架构思想，将采集、显示设计成不同模块接口。通过Makefile管理编译，可应用于SDL显示(如PC机采集)。
+代码通过不同的参数可完成不同的功能。
+
+流程图：
+UVC->MJPEG ->解码为YUYV-> 转换为RGB24格式->转换为RGB16格式，拷贝到framebuffer映射的内存中->看到结果。
+   \->YUYV ----------------/
+
+
+注意事项：
+1、yuv转换rgb未做优化。使用gcc的-O2优先可大大提高速度。将Makefile的debug改为n即可。
+另外，也使用-mfpu=neon，如果不支持，请去掉。
+2、显示所用LCD为rgb565屏幕。
+
+其它说明：
+本程序使用V4l2采集，理论上任何支持该驱动的摄像头。但只使用了UVC测试。
+
+本程序提供的v4l2采集模块、yuv转换rgb模块、framebuffer操作模块，均可直接用于工程项目中。接口完备、清晰。

@@ -7,3 +7,5 @@ $ ./capture
 
 清除编译过程的目标文件，请输入
 $ make clean
+
+注：请务必首先修改Makefile的CROSS_COMPILE和CFLAGS += -mfpu=neon！！！

@@ -41,10 +41,6 @@
 #include "fb_utils.h"
 #include "yuv2rgb.h"
 
-#include "my_types.h"
-#include "time_utils.h"
-#include "debug_time.h"
-
 
 /** 摄像头信息结构体 */
 static struct video_info* vd_info = NULL;
@@ -65,30 +61,7 @@ static int g_save_type = -1;
 static FILE* fp = NULL;
 static char file_name[16] = "raw.yuv";
 
-static int g_dispfd =-1;
-
 static int g_need_display = 0;
-
-#define DISP_DEV_NAME    "/dev/graphics/fb0"
-
-#define FBIOSET_ENABLE			0x5019	
-
-#define  FB_NONSTAND 0x20   // 这个实际是显示屏的格式，0x20表示VN12 0x10表示NV16
-static int g_fb_fmt = FB_NONSTAND;
-
-
-#define RK_FBIOSET_CONFIG_DONE		0x4628
-#define RK_FBIOPUT_COLOR_KEY_CFG	0x4626
-
-struct color_key_cfg {
-	unsigned int win0_color_key_cfg;
-	unsigned int win1_color_key_cfg;
-	unsigned int win2_color_key_cfg;
-};
-
-// 图像显示的框对应于屏的偏移量
-static int cory = 0;
-static int corx = 0;
 
 int g_debug;
 
@@ -108,15 +81,6 @@ static void sig_int(int signum)
     vd_info->is_quit = 1;
     // stop....
     v4l2_close(vd_info);
-    
-    if (g_dispfd > 0)
-    {
-		int disable = 0;
-		printf("Close disp\n");
-		ioctl(g_dispfd, FBIOSET_ENABLE,&disable);
-		close(g_dispfd);
-		g_dispfd = -1;
-	}
     
 end:
     fb_release();
@@ -234,53 +198,6 @@ static int my_save_file(struct video_info* vd_info)
     return 0;
 }
 
-static int my_display_process1(struct video_info* vd_info)
-{
-    int data[2];
-	struct fb_var_screeninfo var;
-    
-    // 注：根据fb要求，这里指定的是buffer的offset。由内核fb驱动读取对应的数据
-    // 数据格式为yuv420sp或422sp
-    
-    data[0] = (int)vd_info->buf.m.offset;
-    data[1] = (int)(data[0] + g_width * g_height);
-
-    if (ioctl(g_dispfd, 0x5002, data) == -1)
-    {
-       printf("%s ioctl fb1 queuebuf fail!\n",__FUNCTION__);
-       return -1;
-    }
-
-    if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1)
-    {
-        printf("%s ioctl fb1 FBIOGET_VSCREENINFO fail!\n",__FUNCTION__);
-        return -1;
-    }
-
-    var.xres_virtual = g_width;	//win0 memery x size
-    var.yres_virtual = g_height;	 //win0 memery y size
-    var.xoffset = 0;   //win0 start x in memery
-    var.yoffset = 0;   //win0 start y in memery
-    var.nonstd = ((cory<<20)&0xfff00000) + (( corx<<8)&0xfff00) +g_fb_fmt;
-    var.grayscale = ((g_height<<20)&0xfff00000) + (( g_width<<8)&0xfff00) + 0;   //win0 xsize & ysize
-    var.xres = g_width;	 //win0 show x size
-    var.yres = g_height;	 //win0 show y size
-    var.bits_per_pixel = 16;
-    var.activate = FB_ACTIVATE_FORCE;
-    if (ioctl(g_dispfd, FBIOPUT_VSCREENINFO, &var) == -1)
-    {
-        printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
-        return -1;
-    }
-    
-    if (ioctl(g_dispfd,RK_FBIOSET_CONFIG_DONE, NULL) < 0)
-    {
-        perror("set config done failed");
-    }
-    
-    return 0;
-}
-
 static int my_display_process(struct video_info* vd_info)
 {
     static unsigned char* rgb_buffer = NULL;
@@ -346,6 +263,7 @@ static int my_display_process(struct video_info* vd_info)
     
 
 #else
+    // TODO：这里使用逐个像素描点，需要找个好的方法
     while (y < height)
     {
         unsigned short  color;
@@ -365,24 +283,6 @@ static int my_display_process(struct video_info* vd_info)
 
 static int my_v4l2_process(struct video_info* vd_info)
 {
-    //debug_msg("my process....\n");
-	
-
-    #if 0
-    // 打印y值
-    int i = 0;
-    char* ptr = vd_info->tmp_buffer;
-    ptr = vd_info->frame_buffer;
-    if (ptr)
-    {
-        for (i = 1; i < 16*3 + 1; i++)
-        {
-            printf("%x ", ptr[i]);
-            if (i%16 == 0) printf("\n");
-        }
-    }
-    #endif
-    
     if (g_need_display)
         my_display_process(vd_info);
     
@@ -393,92 +293,19 @@ static int my_v4l2_process(struct video_info* vd_info)
     return 0;
 }
 
-int create_display(int corx ,int cory,int preview_w,int preview_h)
-{
-	int err = 0;
-	struct fb_var_screeninfo var;
-	unsigned int panelsize[2];
-	struct color_key_cfg clr_key_cfg;
-
-	if(g_dispfd !=-1)
-		goto exit;
-	g_dispfd = open(DISP_DEV_NAME,O_RDWR, 0);
-	if (g_dispfd < 0) {
-		printf("%s Could not open display device\n",__FUNCTION__);
-		err = -1;
-		goto exit;
-	}
-	if(ioctl(g_dispfd, 0x5001, panelsize) < 0)
-	{
-		printf("%s Failed to get panel size\n",__FUNCTION__);
-		err = -1;
-		goto exit1;
-	}
-	if(panelsize[0] == 0 || panelsize[1] ==0)
-	{
-		panelsize[0] = preview_w;
-		panelsize[1] = preview_h;
-	}
-
-	if (ioctl(g_dispfd, FBIOGET_VSCREENINFO, &var) == -1) {
-		printf("%s ioctl fb1 FBIOGET_VSCREENINFO fail!\n",__FUNCTION__);
-		err = -1;
-		goto exit;
-	}
-	printf("preview_w = %d,preview_h =%d,panelsize[1] = %d,panelsize[0] = %d\n",preview_w,preview_h,panelsize[1],panelsize[0]);
-	//var.xres_virtual = preview_w;	//win0 memery x size
-	//var.yres_virtual = preview_h;	 //win0 memery y size
-	var.xoffset = 0;   //win0 start x in memery
-	var.yoffset = 0;   //win0 start y in memery
-	var.nonstd = ((cory<<20)&0xfff00000) + ((corx<<8)&0xfff00) +g_fb_fmt; //win0 ypos & xpos & format (ypos<<20 + xpos<<8 + format)
-	var.grayscale = ((preview_h<<20)&0xfff00000) + (( preview_w<<8)&0xfff00) + 0;	//win0 xsize & ysize
-	var.xres = preview_w;	 //win0 show x size
-	var.yres = preview_h;	 //win0 show y size
-	var.bits_per_pixel = 24;//16; ??
-	var.activate = FB_ACTIVATE_FORCE;
-	
-	printf("var.nonstd=%d, var.grayscale=%d....\n",var.nonstd,var.grayscale);  
-	printf("var.xres=%d, var.yres=%d....\n",var.xres,var.yres); 
-	
-	if (ioctl(g_dispfd, FBIOPUT_VSCREENINFO, &var) == -1) {
-		printf("%s ioctl fb1 FBIOPUT_VSCREENINFO fail!\n",__FUNCTION__);
-		err = -1;
-		goto exit;
-	}
-	
-	clr_key_cfg.win0_color_key_cfg = 0;		//win0 color key disable
-	clr_key_cfg.win1_color_key_cfg = 0x01000000; 	// win1 color key enable
-	clr_key_cfg.win2_color_key_cfg = 0;  
-	if (ioctl(g_dispfd,RK_FBIOPUT_COLOR_KEY_CFG, &clr_key_cfg) == -1)
-    {
-        printf("%s set fb color key failed!\n",__FUNCTION__);
-        err = -1;
-    }
-
-	return 0;
-exit1:
-	if (g_dispfd > 0)
-	{
-		close(g_dispfd);
-		g_dispfd = -1;
-	}
-exit:
-	return err;
-}
-
 void usage(char* name)
 {
-    printf("%s: A video capture tool for rk30 platform version: 1.0\n\n", name);
+    printf("%s: A video capture tool for linux platform version: 1.1\n\n", name);
     printf("usage:\n");
     printf("%s -d [device] -s [format] -w [width] -h [height] -f [save file] --fb(display to framebuffer)\n", name);
     printf("\t -d\tvideo device, eg:/dev/video0\n");
     printf("\t -s\tvideo format, eg:[mjpeg|yuyv|nv12|nv21|nv16|nv61]\n");
-    printf("\t -w\tvideo width, eg:640\n");
-    printf("\t -h\tvideo height, eg:480\n");
+    printf("\t -w\tvideo width, eg:480\n");
+    printf("\t -h\tvideo height, eg:320\n");
     printf("\t -f\tsave file(yuv or jpg file), eg:[yuv|jpg]\n");
     printf("\t --fb\tdisplay video to frame buffer device\n");
     printf("\t --help\t show help info\n");
-    printf("default: %s -d /dev/video0 -w 640 -h 480\n", name);
+    printf("default: %s -d /dev/video0 -w 480 -h 320\n", name);
     
     exit(0);
 }
@@ -546,7 +373,6 @@ int parsecmd(int argc, char *argv[])
                 else if (strcasecmp(g_fmt_name, "nv16") == 0)
                 {
                     g_fmt = V4L2_PIX_FMT_NV16;
-                    g_fb_fmt = 0x10; // nv16
                 }
                 else if (strcasecmp(g_fmt_name, "nv61") == 0)
                     g_fmt = V4L2_PIX_FMT_NV61;
@@ -555,7 +381,6 @@ int parsecmd(int argc, char *argv[])
                 else if (strcasecmp(g_fmt_name, "yuyv") == 0)
                 {
                     g_fmt = V4L2_PIX_FMT_YUYV;
-                    g_fb_fmt = 0x10; // nv16 just for test...
                 }
                 // to add....
                 
@@ -661,9 +486,7 @@ int capture_fb(int argc, char* argv[])
     
     if (g_need_display)
     {
-        fb_init();	// must call first
-        // 标准framebuffer显示，不需要再初始化
-        //create_display(corx, cory, vd_info->width, vd_info->height);
+        fb_init();	// 标准framebuffer显示
     }
     
     while (1)
