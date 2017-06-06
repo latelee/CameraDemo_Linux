@@ -45,7 +45,7 @@
 #include <fcntl.h>              /* open, etc */
 #include <errno.h>
 #include <linux/videodev2.h>
-#include "my-types.h"
+#include "my_types.h"
 
 /* for debug */
 #define DEBUG

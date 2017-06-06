@@ -41,6 +41,10 @@
 #include "fb_utils.h"
 #include "yuv2rgb.h"
 
+#include "my_types.h"
+#include "time_utils.h"
+#include "debug_time.h"
+
 
 /** 摄像头信息结构体 */
 static struct video_info* vd_info = NULL;
@@ -304,37 +308,57 @@ static int my_display_process(struct video_info* vd_info)
     {
         yuv_to_rgb24(FMT_YUYV, vd_info->frame_buffer, rgb_buffer, width, height);
     }
-    if (vd_info->frame_format == V4L2_PIX_FMT_NV12)
+    else if (vd_info->frame_format == V4L2_PIX_FMT_NV12)
     {
         yuv_to_rgb24(FMT_NV12, vd_info->frame_buffer, rgb_buffer, width, height);
     }
-    if (vd_info->frame_format == V4L2_PIX_FMT_NV21)
+    else if (vd_info->frame_format == V4L2_PIX_FMT_NV21)
     {
         yuv_to_rgb24(FMT_NV21, vd_info->frame_buffer, rgb_buffer, width, height);
     }
-    if (vd_info->frame_format == V4L2_PIX_FMT_NV16)
+    else if (vd_info->frame_format == V4L2_PIX_FMT_NV16)
     {
         yuv_to_rgb24(FMT_NV16, vd_info->frame_buffer, rgb_buffer, width, height);
     }
-    if (vd_info->frame_format == V4L2_PIX_FMT_NV61)
+    else if (vd_info->frame_format == V4L2_PIX_FMT_NV61)
     {
         yuv_to_rgb24(FMT_NV61, vd_info->frame_buffer, rgb_buffer, width, height);
     }
-    
-    
-    while (y < fb->height)
+
+#if 0
+
+    //printf("video: %dx%d fb: %dx%d\n", width, height, fb->width, fb->height);
+    tmp_pp = rgb16_buffer;
+    while (y < height)
     {
         unsigned short  color;
         tmp_p = rgb_buffer + y*width*3;
-        for (x=0; x < fb->width; x++)
+        for (x=0; x < width; x++)
         {
             // LCD为rgb565格式，所以要转换
             color = make16color(tmp_p[x*3], tmp_p[x*3+1], tmp_p[x*3+2]);
-            fb_pixel(x, y, color);
-            
+            *((unsigned short*)tmp_pp) = color;
+            tmp_pp += 2;
 		}
         y++;
     }
+    memcpy(fb->fbmem, rgb16_buffer, width*height);
+    
+
+#else
+    while (y < height)
+    {
+        unsigned short  color;
+        tmp_p = rgb_buffer + y*width*3;
+        for (x=0; x < width; x++)
+        {
+            // LCD为rgb565格式，所以要转换
+            color = make16color(tmp_p[x*3], tmp_p[x*3+1], tmp_p[x*3+2]);
+            fb_pixel(x, y, color); 
+		}
+        y++;
+    }
+#endif
 
     return 0;
 }
