@@ -22,7 +22,7 @@
 ###############################################################################
 
 # !!!=== cross compile...
-CROSS_COMPILE ?= arm-linux-gnueabi-
+CROSS_COMPILE ?= arm-linux-
 
 CC  = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++

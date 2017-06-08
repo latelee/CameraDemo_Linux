@@ -179,7 +179,7 @@ static int display(void)
 	}
 	lasttime = currtime;
 
-	if (v4l2_grab(vd_info) < 0)
+	if (v4l2_readframe(vd_info) < 0)
 	{
 	    printf("Error grabbing \n");
 	    break;

@@ -479,7 +479,7 @@ int capture_fb(int argc, char* argv[])
     printf("====info video fmt: 0x%x res: %dx%d driver type: %d\n", 
             vd_info->format, vd_info->width, vd_info->height, vd_info->driver_type);
             
-    v4l2_set_processcb(my_v4l2_process);
+    //v4l2_set_processcb(my_v4l2_process);
     
     if (v4l2_init(vd_info) < 0)
         return -1;
@@ -491,12 +491,12 @@ int capture_fb(int argc, char* argv[])
     
     while (1)
     {
-        if (v4l2_grab(vd_info) < 0)
+        if (v4l2_readframe(vd_info) < 0)
         {
             printf("Error grabbing will continue\n");
             //break;
         }
-        
+        my_v4l2_process(vd_info);
         fps++;
     }
     

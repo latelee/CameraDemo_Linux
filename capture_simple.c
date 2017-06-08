@@ -220,7 +220,7 @@ int capture_v4l2simple(int argc, char* argv[])
     
     while (1)
     {
-        if (v4l2_grab(vd_info) < 0)
+        if (v4l2_readframe(vd_info) < 0)
         {
             printf("Error grabbing \n");
             //break;

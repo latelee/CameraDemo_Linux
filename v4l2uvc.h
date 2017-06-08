@@ -111,7 +111,7 @@ int v4l2_init(struct video_info* vd_info);
 int v4l2_on(struct video_info* vd_info);
 int v4l2_off(struct video_info* vd_info);
 
-int v4l2_grab(struct video_info* vd_info);
+int v4l2_readframe(struct video_info* vd_info);
 
 void v4l2_capture(struct video_info* vd_info);
 

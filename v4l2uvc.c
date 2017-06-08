@@ -358,13 +358,13 @@ int v4l2_set_processcb(v4l2_process_cb_ptr ptr)
 
 
 /** 
- * v4l2_grab - 采集摄像头数据
+ * v4l2_readframe - 采集摄像头数据
  * 
  * @param vd_info 摄像头信息结构体
  * 
  * @return 成功则返回0，否则返回-1，并提示出错信息
  */
-int v4l2_grab(struct video_info* vd_info)
+int v4l2_readframe(struct video_info* vd_info)
 {
 #define HEADFRAME1 0xaf
     static int count = 0;
@@ -492,7 +492,7 @@ void v4l2_capture(struct video_info* vd_info)
             }
 #endif
             /* good */
-            if (v4l2_grab(vd_info))
+            if (v4l2_readframe(vd_info))
                 break;
             /* try again if errno = EAGAIN */
         }
